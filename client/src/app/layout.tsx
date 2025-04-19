@@ -1,20 +1,12 @@
 import type { Metadata } from "next";
-// Removed Red_Hat_Display import
-import { Geist, Geist_Mono } from "next/font/google";
+// Removed next/font imports to disable optimization
+// import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-// Removed Red Hat Display configuration
+// Removed font loading configuration
+// const geistSans = Geist({ ... });
+// const geistMono = Geist_Mono({ ... });
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -31,11 +23,9 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body
         // Combine font variables using cn utility
+        // Removed font variables from className, rely on Tailwind defaults or globals.css
         className={cn(
-          "min-h-screen bg-background font-sans antialiased",
-          geistSans.variable,
-          geistMono.variable
-          // Removed redHatDisplay.variable
+          "min-h-screen bg-background font-sans antialiased"
         )}
       >
         {children}
