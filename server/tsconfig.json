@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "target": "ES2016", // Target modern Node.js versions
+    "module": "NodeNext", // Use Node.js native ES modules
+    "moduleResolution": "NodeNext", // How modules get resolved
+    "baseUrl": "./src", // Base directory for non-relative imports
+    "outDir": "./dist", // Output directory for compiled JavaScript
+    "esModuleInterop": true, // Enables compatibility with CommonJS modules
+    "forceConsistentCasingInFileNames": true, // Disallow inconsistently-cased references
+    "strict": true, // Enable all strict type-checking options
+    "skipLibCheck": true, // Skip type checking of declaration files
+    "resolveJsonModule": true, // Allow importing JSON files
+    "sourceMap": true, // Generate source maps for debugging
+    "declaration": true // Generate corresponding '.d.ts' file
+  },
+  "include": ["src/**/*"], // Which files to include in compilation
+  "exclude": ["node_modules", "dist", "src/**/*.test.ts"] // Which files/directories to exclude
+}

@@ -1,0 +1,17 @@
+{
+  "name": "veltis-protocol-monorepo",
+  "version": "1.0.0",
+  "description": "Root package for Veltis Protocol workspaces",
+  "private": true,
+  "workspaces": [
+    "client",
+    "server",
+    "contracts"
+  ],
+  "scripts": {
+    "comment": "Add root-level scripts here if needed later, e.g., for concurrent running"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    // These settings are primarily to satisfy Hardhat when run from root
+    "target": "es2020",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "esModuleInterop": true,
+    "skipLibCheck": true
+  },
+  // Exclude actual project source folders to avoid conflicts
+  "exclude": ["node_modules", "client", "server", "contracts"]
+}
