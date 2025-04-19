@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-// Import Red_Hat_Display along with Geist
-import { Geist, Geist_Mono, Red_Hat_Display } from "next/font/google";
+// Removed Red_Hat_Display import
+import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { cn } from "@/lib/utils"; // Import cn for combining class names
+import { cn } from "@/lib/utils";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,13 +14,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-// Configure Red Hat Display
-const redHatDisplay = Red_Hat_Display({
-  variable: "--font-red-hat-display",
-  subsets: ["latin"],
-  weight: ['400', '500', '600', '700'], // Specify weights if needed
-  display: 'swap', // Font display strategy
-});
+// Removed Red Hat Display configuration
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -38,10 +32,10 @@ export default function RootLayout({
       <body
         // Combine font variables using cn utility
         className={cn(
-          "min-h-screen bg-background font-sans antialiased", // Use Geist Sans as default body font
+          "min-h-screen bg-background font-sans antialiased",
           geistSans.variable,
-          geistMono.variable,
-          redHatDisplay.variable // Add Red Hat Display variable
+          geistMono.variable
+          // Removed redHatDisplay.variable
         )}
       >
         {children}

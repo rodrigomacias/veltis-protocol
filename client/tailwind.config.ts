@@ -20,8 +20,7 @@ const config = {
     },
     extend: {
       fontFamily: {
-        // Add Red Hat Display using the CSS variable defined in layout.tsx
-        'red-hat': ['var(--font-red-hat-display)', ...defaultTheme.fontFamily.sans],
+        // Removed 'red-hat' font definition
         // Keep Geist Sans as the default sans-serif font
         sans: ['var(--font-geist-sans)', ...defaultTheme.fontFamily.sans],
         mono: ['var(--font-geist-mono)', ...defaultTheme.fontFamily.mono],
