@@ -41,7 +41,7 @@ const BenefitsSection = () => (
                 <h3 className="text-xl font-semibold mb-3">Problems Solved</h3>
                 <ul className="list-disc list-inside space-y-2 text-muted-foreground">
                     <li><strong>Proof of Priority:</strong> Eliminate disputes over invention timing with immutable blockchain timestamps.</li>
-                    <li><strong>Data Integrity:</strong> Ensure your research data hasn't been tampered with using cryptographic hashes linked to your IPNFT.</li> {/* Fixed apostrophe */}
+                    <li><strong>Data Integrity:</strong> Ensure your research data hasn&apos;t been tampered with using cryptographic hashes linked to your IPNFT.</li> {/* Fixed apostrophe */}
                     <li><strong>Simplified Disclosure:</strong> Streamline the process of documenting and proving the existence of IP for patents or partnerships.</li>
                     <li><strong>Lack of Trust:</strong> Build confidence with collaborators, investors, or TTOs by providing verifiable proof of your work.</li>
                     <li><strong>Asset Management:</strong> Centralize and manage your critical R&D documentation securely.</li>
@@ -51,7 +51,7 @@ const BenefitsSection = () => (
                 <h3 className="text-xl font-semibold mb-3">Benefits & Outcomes</h3>
                  <ul className="list-disc list-inside space-y-2 text-muted-foreground">
                     <li><strong>Enhanced IP Protection:</strong> Secure early-stage proof before formal patenting.</li>
-                    <li><strong>Increased Trust & Transparency:</strong> Provide undeniable proof of your asset's existence and integrity.</li> {/* Fixed apostrophe */}
+                    <li><strong>Increased Trust & Transparency:</strong> Provide undeniable proof of your asset&apos;s existence and integrity.</li> {/* Fixed apostrophe */}
                     <li><strong>Streamlined Collaboration:</strong> Share verifiable proof with partners confidently.</li>
                     <li><strong>Improved Due Diligence:</strong> Simplify the verification process for investors or acquirers.</li>
                     <li><strong>Global Accessibility:</strong> Secure and manage your assets from anywhere on the Polygon network.</li>

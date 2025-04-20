@@ -4,10 +4,9 @@
 import { createClient } from '@/lib/supabase/client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link'; // Link is used in the table
 import Sidebar from '@/components/dashboard/Sidebar';
 import axios from 'axios';
-import { User } from '@supabase/supabase-js'; // Keep User import for now, even if unused by lint
+// import { User } from '@supabase/supabase-js'; // Removed unused import
 
 // TODO: Define types for fetched data (ideally generated from Supabase schema later)
 interface IpRecord {
@@ -33,17 +32,17 @@ interface IpRecord {
 export default function DashboardPage() {
   const supabase = createClient();
   const router = useRouter();
-  // const [user, setUser] = useState<User | null>(null); // Keep commented out
+  // const [user, setUser] = useState<User | null>(null); // Removed unused state variable
   const [ipRecords, setIpRecords] = useState<IpRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [downloadingCert, setDownloadingCert] = useState<string | null>(null);
-  const [downloadError, setDownloadError] = useState<string | null>(null);
+  const [downloadError, setDownloadError] = useState<string | null>(null); // Keep state to display error
 
   // --- Download Certificate Handler ---
   const handleDownloadCertificate = async (recordId: string) => {
     setDownloadingCert(recordId);
-    setDownloadError(null);
+    setDownloadError(null); // Clear previous errors
     try {
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         if (sessionError || !session) {
@@ -83,7 +82,7 @@ export default function DashboardPage() {
         link.parentNode?.removeChild(link);
         window.URL.revokeObjectURL(url);
 
-    } catch (err: unknown) {
+    } catch (err: unknown) { // Use unknown
         console.error("Certificate download error:", err);
         let displayError = 'Failed to download certificate.';
         if (axios.isAxiosError(err) && err.response?.data) {
@@ -96,7 +95,7 @@ export default function DashboardPage() {
         } else if (err instanceof Error) {
             displayError = err.message;
         }
-        setDownloadError(displayError);
+        setDownloadError(displayError); // Set error state to display
     } finally {
         setDownloadingCert(null);
     }
@@ -114,7 +113,7 @@ export default function DashboardPage() {
         router.push('/login');
         return;
       }
-      // setUser(session.user);
+      // setUser(session.user); // Removed unused state update
 
       const { data, error: fetchError } = await supabase
         .from('ip_records')
@@ -233,7 +232,7 @@ export default function DashboardPage() {
                 </table>
               </div>
             ) : (
-              <div className="text-center py-12 text-muted-foreground bg-card rounded-lg shadow">You haven't created any IPNFTs yet.</div> {/* Fixed apostrophe */}
+              <div className="text-center py-12 text-muted-foreground bg-card rounded-lg shadow">You haven&apos;t created any IPNFTs yet.</div>
             )}
          </section>
          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
@@ -253,6 +252,6 @@ export default function DashboardPage() {
              </section>
         </div>
        </main>
-    </div> // Ensure this closing div matches the opening one for the main flex container
+    </div>
   );
 }

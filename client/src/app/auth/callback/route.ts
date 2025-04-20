@@ -16,7 +16,7 @@ export async function GET(request: Request) {
   const origin = requestUrl.origin; // Get the origin for redirection
 
   if (code) {
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const supabase = createClient(cookieStore);
 
     try {

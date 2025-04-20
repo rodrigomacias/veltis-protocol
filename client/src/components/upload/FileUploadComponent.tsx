@@ -74,9 +74,9 @@ const FREE_TIER_STORAGE_LIMIT_BYTES = 100 * 1024 * 1024; // 100MB
 
 // Define a more specific type for the Ethereum provider injected by wallets
 type Eip1193Provider = ethers.Eip1193Provider & {
-    // Use any[] for listener args to avoid specific signature conflicts
-    on?: (event: string, listener: (...args: any[]) => void) => Eip1193Provider;
-    removeListener?: (event: string, listener: (...args: any[]) => void) => Eip1193Provider;
+  on?: (event: 'accountsChanged', listener: (accounts: string[]) => void) => Eip1193Provider;
+  removeListener?: (event: 'accountsChanged', listener: (accounts: string[]) => void) => Eip1193Provider;
+  // Add other potential event signatures here if needed
 };
 
 
