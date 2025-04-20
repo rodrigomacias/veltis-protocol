@@ -2,11 +2,6 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /* config options here */
-  // Disable lightningcss to prevent Linux module loading issues
-  experimental: {
-    useLightningcss: false,
-  },
-  // Disable built-in CSS optimization features that might use lightningcss
   webpack: (config) => {
     return config;
   },

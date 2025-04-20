@@ -1,14 +1,14 @@
 import type { Config } from 'tailwindcss'
-import defaultTheme from 'tailwindcss/defaultTheme' // Correct import for default theme
+import defaultTheme from 'tailwindcss/defaultTheme'
 
-const config = {
-  darkMode: 'class' as const, // Correct type for darkMode strategy
+const config: Config = {
+  darkMode: 'class',
   content: [
     './pages/**/*.{ts,tsx}',
     './components/**/*.{ts,tsx}',
     './app/**/*.{ts,tsx}',
     './src/**/*.{ts,tsx}',
-	],
+  ],
   prefix: '',
   theme: {
     container: {
@@ -20,9 +20,7 @@ const config = {
     },
     extend: {
       fontFamily: {
-        // Re-add Red Hat Display using the CSS variable defined in layout.tsx
         'red-hat': ['var(--font-red-hat-display)', ...defaultTheme.fontFamily.sans],
-        // Keep Geist Sans as the default sans-serif font
         sans: ['var(--font-geist-sans)', ...defaultTheme.fontFamily.sans],
         mono: ['var(--font-geist-mono)', ...defaultTheme.fontFamily.mono],
       },
@@ -60,8 +58,7 @@ const config = {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
         },
-        // Add custom colors if needed
-        'bio-dark': '#1a202c', // Example custom color
+        'bio-dark': '#1a202c',
       },
       borderRadius: {
         lg: 'var(--radius)',
@@ -85,6 +82,6 @@ const config = {
     },
   },
   plugins: [require('tailwindcss-animate')],
-} satisfies Config
+}
 
 export default config
