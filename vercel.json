@@ -5,12 +5,19 @@
       "src": "client/package.json",
       "use": "@vercel/next",
       "config": {
-        "installCommand": "cd client && npm install --no-optional --legacy-peer-deps",
-        "buildCommand": "cd client && npm install next@14.0.4 react@18.2.0 react-dom@18.2.0 --save-exact && npm run build"
+        "installCommand": "cd client && npm install --no-optional --legacy-peer-deps && npm install next@14.0.4 react@18.2.0 react-dom@18.2.0 --save-exact",
+        "buildCommand": "cd client && NODE_OPTIONS=\"--max-old-space-size=4096\" npm run build"
       }
     }
   ],
   "env": {
-    "NODE_OPTIONS": "--max_old_space_size=4096"
-  }
+    "NODE_OPTIONS": "--max_old_space_size=4096",
+    "NEXT_TELEMETRY_DISABLED": "1"
+  },
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://api.veltis.com/api/:path*"
+    }
+  ]
 }
