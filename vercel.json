@@ -1,13 +1,23 @@
 {
   "version": 2,
+  "builds": [
+    {
+      "src": "client/package.json",
+      "use": "@vercel/next",
+      "config": {
+        "installCommand": "cd client && npm install --no-optional --legacy-peer-deps",
+        "buildCommand": "cd client && NODE_OPTIONS=\"--max-old-space-size=4096\" npm run build"
+      }
+    }
+  ],
+  "env": {
+    "NODE_OPTIONS": "--max_old_space_size=4096",
+    "NEXT_TELEMETRY_DISABLED": "1"
+  },
   "rewrites": [
     {
       "source": "/api/:path*",
       "destination": "https://api.veltis.com/api/:path*"
     }
-  ],
-  "buildCommand": "cd client && npm install --no-optional --legacy-peer-deps && npm run build",
-  "installCommand": "cd client && npm install",
-  "framework": "nextjs",
-  "outputDirectory": "./client/.next"
+  ]
 }
