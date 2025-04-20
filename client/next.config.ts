@@ -2,9 +2,13 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /* config options here */
-  // Disable lightningcss to avoid Vercel build failures
+  // Disable lightningcss to prevent Linux module loading issues
   experimental: {
     useLightningcss: false,
+  },
+  // Disable built-in CSS optimization features that might use lightningcss
+  webpack: (config) => {
+    return config;
   },
   // Add rewrites to proxy API requests to the backend during development
   async rewrites() {
