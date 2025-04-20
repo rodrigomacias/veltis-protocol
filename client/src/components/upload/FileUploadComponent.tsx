@@ -1,12 +1,14 @@
-'use client'; // Keep only one 'use client' at the top
+'use client'; // This component interacts with browser APIs (File API, fetch/axios)
+
+'use client'; // This component interacts with browser APIs (File API, fetch/axios, window.ethereum)
 
 import React, { useState, useCallback, useEffect } from 'react';
 import axios from 'axios';
-import { ethers } from 'ethers';
+import { ethers } from 'ethers'; // Import ethers
 import { createClient } from '@/lib/supabase/client';
-// Removed unused icons: Info, Zap
-import { UploadCloud, Loader2, CheckCircle, AlertCircle, Wallet } from 'lucide-react';
+import { UploadCloud, Loader2, CheckCircle, AlertCircle, Info, Wallet, Zap } from 'lucide-react'; // Add Wallet, Zap icons
 import { cn } from '@/lib/utils';
+// Import the ABI - ensure the path is correct relative to this file
 import VeltisIPNFT_ABI from '../../../../server/src/config/VeltisIPNFT.abi.json'; // Adjust path as needed
 
 // TODO: Replace with actual Shadcn Button import if available after adding component
@@ -15,7 +17,7 @@ const Button = ({ className, children, ...props }: React.ButtonHTMLAttributes<HT
       {children}
     </button>
   );
-// Removed unused @ts-expect-error
+// @ts-ignore
 Button.defaultProps = { variant: "default", size: "default" };
 
 // Define more granular statuses for the multi-step process
@@ -298,8 +300,7 @@ const FileUploadComponent: React.FC = () => {
       console.log('Mint transaction confirmed:', receipt.hash);
 
       // Find the Transfer event to get the tokenId
-      // Use ethers.Log type for log parameter
-      const transferEvent = receipt.logs?.find((log: ethers.Log) => {
+      const transferEvent = receipt.logs?.find((log: any) => {
           try {
               const parsedLog = contract.interface.parseLog(log);
               // Minting emits Transfer from address(0)
@@ -358,17 +359,11 @@ const FileUploadComponent: React.FC = () => {
         if (!error && data) setProfileData(data);
       }
 
-    } catch (error: unknown) { // Type error as unknown
+    } catch (error: any) {
       console.error('Minting process error:', error);
       setStatus('error');
-      // Type guard for AxiosError
-      let message = 'An unknown error occurred during the minting process.';
-      if (axios.isAxiosError(error)) {
-          message = error.response?.data?.message || error.message;
-      } else if (error instanceof Error) {
-          message = error.message;
-      }
-      setErrorMessage(message);
+      // Provide more specific error messages based on the step?
+      setErrorMessage(error.response?.data?.message || error.message || 'An unknown error occurred during the minting process.');
     }
   };
 

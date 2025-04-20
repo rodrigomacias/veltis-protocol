@@ -1,10 +1,14 @@
 'use client'; // This component interacts with browser APIs (Supabase client)
 
+'use client';
+
 import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
-import { createClient } from '@/lib/supabase/client'; // Use the client-side utility
+import { createClient } from '@/lib/supabase/client';
 import { useEffect, useState } from 'react';
 import { Session } from '@supabase/supabase-js';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link'; // Import Link
 
 /**
  * Renders a Supabase Auth UI component for login/registration.
@@ -16,7 +20,8 @@ import { Session } from '@supabase/supabase-js';
  * @returns {JSX.Element} The authentication form component.
  */
 export default function AuthForm() {
-  const supabase = createClient(); // Initialize client-side Supabase client
+  const supabase = createClient();
+  const router = useRouter(); // Initialize router
   const [session, setSession] = useState<Session | null>(null);
 
   useEffect(() => {
@@ -28,10 +33,18 @@ export default function AuthForm() {
     // Listen for auth state changes (login, logout, etc.)
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session);
-      // Optional: Add redirect logic here based on event or session status
-      // e.g., if (session) router.push('/dashboard');
+      // Redirect to dashboard on successful sign-in
+      if (event === 'SIGNED_IN' && session) {
+        console.log('AuthForm: SIGNED_IN detected, redirecting to /dashboard');
+        router.push('/dashboard');
+        router.refresh(); // Ensure server components know about the session
+      }
+      // Optional: Handle SIGNED_OUT if needed, though middleware might cover it
+      // if (event === 'SIGNED_OUT') {
+      //   router.push('/');
+      // }
     });
 
     // Cleanup subscription on component unmount
@@ -49,6 +62,8 @@ export default function AuthForm() {
         >
           Sign Out
         </button>
+        {/* Optionally add a link to dashboard if user somehow lands here while logged in */}
+        <Link href="/dashboard" className="ml-4 text-blue-500 hover:underline">Go to Dashboard</Link>
       </div>
     );
   }
@@ -60,7 +75,7 @@ export default function AuthForm() {
         supabaseClient={supabase}
         appearance={{ theme: ThemeSupa }}
         theme="dark" // Or "light" or remove for default
-        providers={['google', 'github']} // Optional: Add social providers
+        providers={['google']} // Removed 'github'
         redirectTo={`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/auth/callback`} // Optional: For OAuth redirects
         showLinks={true} // Show links for password reset, etc.
         view="sign_in" // Can be 'sign_in', 'sign_up', 'forgotten_password', etc.

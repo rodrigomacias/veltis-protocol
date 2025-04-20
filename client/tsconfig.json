@@ -11,7 +11,6 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "types": ["vitest/globals"], // Add vitest types
     "jsx": "preserve",
     "incremental": true,
     "types": ["vitest/globals", "@testing-library/jest-dom"], // Add types for testing

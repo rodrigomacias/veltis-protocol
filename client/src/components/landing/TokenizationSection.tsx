@@ -1,9 +1,9 @@
 'use client'; // Make this a client component
 
-import React, { useState, useEffect } from 'react';
-// import Link from 'next/link'; // Unused
-// import { ArrowRight } from 'lucide-react'; // Unused
-import { createClient } from '@/lib/supabase/client';
+import React, { useState, useEffect } from 'react'; // Import hooks
+import Link from 'next/link';
+import { ArrowRight } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client'; // Import client-side Supabase client
 import FeatureCard from './FeatureCard';
 import FileUploadComponent from '../upload/FileUploadComponent'; // Import the actual component
 // import { Button } from '@/components/ui/button';
@@ -15,11 +15,11 @@ const Button = ({ className, children, ...props }: React.ButtonHTMLAttributes<HT
       {children}
     </button>
   );
-// Removed unused @ts-expect-error
+// @ts-ignore
 Button.defaultProps = { variant: "default", size: "default" };
 
 
-// Removed placeholder component definition
+// Remove placeholder component definition
 // Remove TokenizationSectionProps interface
 // interface TokenizationSectionProps {
 //   isLoggedIn: boolean;

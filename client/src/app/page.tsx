@@ -1,5 +1,7 @@
-// import { createClient } from '@/lib/supabase/server'; // Unused
-// import { cookies } from 'next/headers'; // Unused
+import { createClient } from '@/lib/supabase/server'; // Use server client for initial auth check
+import { cookies } from 'next/headers';
+// import { createClient } from '@/lib/supabase/server'; // No longer needed for auth check here
+// import { cookies } from 'next/headers'; // No longer needed here
 import Header from '@/components/landing/Header';
 import HeroSection from '@/components/landing/HeroSection';
 // import TokenizationSection from '@/components/landing/TokenizationSection'; // Removed

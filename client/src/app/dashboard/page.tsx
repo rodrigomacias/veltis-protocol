@@ -1,13 +1,13 @@
 // Make this a Client Component to use hooks for potential client-side data or interactions later
 'use client';
 
-import { createClient } from '@/lib/supabase/client'; // Use client for potential future interactions
-import { useState, useEffect } from 'react'; // Import hooks
-import { useRouter } from 'next/navigation'; // Use useRouter for client-side navigation if needed
-// import Link from 'next/link'; // Link is unused now
+import { createClient } from '@/lib/supabase/client';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 // import FileUploadComponent from '@/components/upload/FileUploadComponent'; // Removed import
-import Sidebar from '@/components/dashboard/Sidebar'; // Import the Sidebar
-import type { User } from '@supabase/supabase-js'; // Import User type
+import Sidebar from '@/components/dashboard/Sidebar';
+import axios from 'axios'; // Import axios for API call
 
 // TODO: Define types for fetched data (ideally generated from Supabase schema later)
 interface IpRecord {
@@ -33,10 +33,64 @@ interface IpRecord {
 export default function DashboardPage() { // Renamed conceptually to Portfolio Page
   const supabase = createClient();
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null); // Use specific User type
+  const [user, setUser] = useState<any>(null);
   const [ipRecords, setIpRecords] = useState<IpRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [downloadingCert, setDownloadingCert] = useState<string | null>(null); // Track which cert is downloading
+  const [downloadError, setDownloadError] = useState<string | null>(null); // Track download errors
+
+  // --- Download Certificate Handler ---
+  const handleDownloadCertificate = async (recordId: string) => {
+    setDownloadingCert(recordId);
+    setDownloadError(null);
+    try {
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError || !session) {
+            throw new Error(sessionError?.message || 'User not authenticated.');
+        }
+        const token = session.access_token;
+
+        const response = await axios.get(`/api/records/${recordId}/certificate`, {
+            baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001', // Ensure backend URL is correct
+            headers: {
+                'Authorization': `Bearer ${token}`,
+            },
+            responseType: 'blob', // Important: expect a blob response
+        });
+
+        if (response.status !== 200) {
+            throw new Error(`Failed to download certificate (status: ${response.status})`);
+        }
+
+        // Create a URL for the blob and trigger download
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement('a');
+        link.href = url;
+        // Extract filename from content-disposition header if available, otherwise use default
+        const contentDisposition = response.headers['content-disposition'];
+        let filename = `certificate-${recordId}.pdf`; // Default filename
+        if (contentDisposition) {
+            const filenameMatch = contentDisposition.match(/filename="?(.+)"?/i);
+            if (filenameMatch && filenameMatch.length === 2) {
+                filename = filenameMatch[1];
+            }
+        }
+        link.setAttribute('download', filename);
+        document.body.appendChild(link);
+        link.click();
+
+        // Clean up
+        link.parentNode?.removeChild(link);
+        window.URL.revokeObjectURL(url);
+
+    } catch (err: any) {
+        console.error("Certificate download error:", err);
+        setDownloadError(err.response?.data?.message || err.message || 'Failed to download certificate.');
+    } finally {
+        setDownloadingCert(null);
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -51,7 +105,7 @@ export default function DashboardPage() { // Renamed conceptually to Portfolio P
         router.push('/login');
         return;
       }
-      setUser(session.user); // user state is now typed
+      setUser(session.user);
 
       // Fetch user's IP records from Supabase
       const { data, error: fetchError } = await supabase
@@ -120,14 +174,13 @@ export default function DashboardPage() { // Renamed conceptually to Portfolio P
             {/* Add other header elements like search or filters later */}
         </div>
 
-         {/* Grid for main content sections */}
-         <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+         {/* Remove grid layout for now, stack sections vertically */}
+         {/* <div className="grid grid-cols-1 xl:grid-cols-3 gap-8"> */}
 
-            {/* Left Column (Portfolio Table + Analytics Placeholder) */}
-            <div className="xl:col-span-2 space-y-8">
-                 {/* Section: Portfolio Table */}
+            {/* Portfolio Table Section (Full Width) */}
+            {/* <div className="xl:col-span-3 space-y-8"> */} {/* Make table span full width */}
                  <section id="portfolio">
-                    {/* Title moved to page header */}
+                    {/* Title is part of page header */}
                     {ipRecords && ipRecords.length > 0 ? (
                       <div className="overflow-x-auto rounded-lg border bg-card shadow">
                         <table className="min-w-full divide-y divide-border">
@@ -164,10 +217,15 @@ export default function DashboardPage() { // Renamed conceptually to Portfolio P
                                   )}
                                 </td>
                                 <td className="whitespace-nowrap px-6 py-4 text-sm font-medium space-x-2">
-                                   {/* Link to download certificate */}
-                                   <a href={`/api/records/${record.id}/certificate`} className="text-primary hover:underline" title="Download Certificate">
-                                     Cert
-                                   </a>
+                                   {/* Button to download certificate */}
+                                   <button
+                                     onClick={() => handleDownloadCertificate(record.id)}
+                                     disabled={downloadingCert === record.id}
+                                     className="text-primary hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
+                                     title="Download Certificate"
+                                   >
+                                     {downloadingCert === record.id ? 'Downloading...' : 'Cert'}
+                                   </button>
                                    {/* Link to view file on IPFS */}
                                    {record.files?.storage_ref && (
                                       <a
@@ -190,23 +248,15 @@ export default function DashboardPage() { // Renamed conceptually to Portfolio P
                         </table>
                       </div>
                     ) : (
-                      // Fixed unescaped apostrophe
                       <div className="text-center py-12 text-muted-foreground bg-card rounded-lg shadow">You haven't created any IPNFTs yet.</div>
                     )}
                  </section> {/* Close the portfolio section */}
+            {/* </div> */} {/* Close Column div */}
 
-                 {/* Placeholder Analytics Section */}
-                 <section className="p-6 bg-card rounded-lg shadow">
-                    <h2 className="text-xl font-semibold mb-4">Portfolio Analytics</h2>
-                    <p className="text-sm text-muted-foreground mb-4">Visual graphs and figures about your IPNFTs (coming soon).</p>
-                    <div className="h-48 bg-muted rounded flex items-center justify-center text-muted-foreground">Graph Placeholder</div>
-                 </section>
-            </div> {/* Close Left Column */}
-
-            {/* Right Column (Wallet + Transactions) */}
-            <div className="xl:col-span-1 space-y-8">
+            {/* Placeholder Sections (Below Table) */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8"> {/* New grid for placeholders */}
                  {/* Placeholder Wallet Section */}
-                 <section className="p-6 bg-card rounded-lg shadow">
+                 <section className="lg:col-span-1 p-6 bg-card rounded-lg shadow">
                      <h2 className="text-xl font-semibold mb-4">Wallet Overview</h2>
                      {/* TODO: Fetch and display actual wallet balance */}
                      <p className="text-muted-foreground mb-2">Balance: <span className="font-semibold">-- MATIC</span></p>
@@ -214,13 +264,19 @@ export default function DashboardPage() { // Renamed conceptually to Portfolio P
                  </section>
 
                  {/* Placeholder Transaction Summary */}
-                 <section className="p-6 bg-card rounded-lg shadow">
+                 <section className="lg:col-span-1 p-6 bg-card rounded-lg shadow">
                      <h2 className="text-xl font-semibold mb-4">Recent Transactions</h2>
                      {/* TODO: Fetch and display recent transactions */}
                      <div className="h-48 bg-muted rounded flex items-center justify-center text-muted-foreground">Transaction List Placeholder</div>
                  </section>
-            </div> {/* Close Right Column div */}
-         </div> {/* Close main content grid div */}
+                 {/* Placeholder Analytics Section */}
+                 <section className="lg:col-span-1 p-6 bg-card rounded-lg shadow">
+                    <h2 className="text-xl font-semibold mb-4">Portfolio Analytics</h2>
+                    <p className="text-sm text-muted-foreground mb-4">Visual graphs and figures about your IPNFTs (coming soon).</p>
+                    <div className="h-48 bg-muted rounded flex items-center justify-center text-muted-foreground">Graph Placeholder</div>
+                 </section>
+            </div> {/* Close placeholder grid div */}
+         {/* </div> */} {/* Close original main content grid div */}
        </main> {/* End main content area */}
     </div> // Close the root flex container
   );

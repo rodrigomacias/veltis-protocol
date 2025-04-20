@@ -10,7 +10,7 @@ const Button = ({ className, children, ...props }: React.ButtonHTMLAttributes<HT
       {children}
     </button>
   );
-// Removed unused @ts-expect-error
+// @ts-ignore
 Button.defaultProps = { variant: "default", size: "default" };
 
 
@@ -56,16 +56,11 @@ const FeatureCard: React.FC<FeatureCardProps> = ({
           {/* Allow embedding custom children like the file uploader */}
           {children}
         </div>
-        {/* CTA Button - Wrap in Link if ctaHref is provided */}
-        {ctaText && (
-            <Link href={ctaHref} passHref legacyBehavior>
-                {/* Removed 'as="a"' prop */}
-                <Button variant="outline" className="bio-button group mt-4 self-start"> {/* Use custom class */}
-                  {ctaText}
-                  <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-                </Button>
-            </Link>
-        )}
+        {/* CTA Button */}
+        <Button variant="outline" className="bio-button group mt-4 self-start"> {/* Use custom class */}
+          {ctaText}
+          <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+        </Button>
       </div>
 
       {/* Image Area (Optional) */}

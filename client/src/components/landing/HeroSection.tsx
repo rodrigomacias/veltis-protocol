@@ -32,7 +32,7 @@ const HeroSection: React.FC = () => {
         {/* Content container */}
         <div className="relative z-10 flex flex-col items-center space-y-6">
             {/* Logo Text */}
-            <h1 className="text-6xl sm:text-7xl md:text-8xl font-semibold lowercase tracking-tight font-red-hat">
+            <h1 className="text-6xl sm:text-7xl md:text-8xl font-semibold lowercase tracking-tight font-red-hat"> {/* Ensure font-red-hat is present */}
                 veltis
             </h1>
 

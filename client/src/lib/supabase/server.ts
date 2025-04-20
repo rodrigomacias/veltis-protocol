@@ -9,11 +9,11 @@ import { type cookies } from 'next/headers'; // Import the cookies function type
  * Retrieves Supabase URL and Anon Key from environment variables.
  * Throws an error if environment variables are missing.
  *
- * @param {any} cookieStore - The cookie store obtained from `next/headers`. Using 'any' to bypass type inference issues.
+ * @param {ReturnType<typeof cookies>} cookieStore - The cookie store obtained from `next/headers`.
  * @returns {SupabaseClient<Database>} An initialized Supabase client instance configured for server-side use.
  * @throws {Error} If SUPABASE_URL or SUPABASE_ANON_KEY are not defined.
  */
-export function createClient(cookieStore: any) { // Changed type to any
+export function createClient(cookieStore: ReturnType<typeof cookies>) { // Use ReturnType to infer the correct type
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
@@ -30,22 +30,22 @@ export function createClient(cookieStore: any) { // Changed type to any
       get(name: string) {
         return cookieStore.get(name)?.value;
       },
-        set(name: string, value: string, options: CookieOptions) {
-          try {
-            cookieStore.set({ name, value, ...options });
-          } catch (_error) { // Prefix unused variable with underscore
-            // The `set` method was called from a Server Component.
-            // This can be ignored if you have middleware refreshing
-            // user sessions.
+      set(name: string, value: string, options: CookieOptions) {
+        try {
+          cookieStore.set({ name, value, ...options });
+        } catch (error) {
+          // The `set` method was called from a Server Component.
+          // This can be ignored if you have middleware refreshing
+          // user sessions.
         }
       },
-        remove(name: string, options: CookieOptions) {
-          try {
-            cookieStore.set({ name, value: '', ...options });
-          } catch (_error) { // Prefix unused variable with underscore
-            // The `delete` method was called from a Server Component.
-            // This can be ignored if you have middleware refreshing
-            // user sessions.
+      remove(name: string, options: CookieOptions) {
+        try {
+          cookieStore.set({ name, value: '', ...options });
+        } catch (error) {
+          // The `delete` method was called from a Server Component.
+          // This can be ignored if you have middleware refreshing
+          // user sessions.
         }
       },
     },
