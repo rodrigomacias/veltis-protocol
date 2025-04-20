@@ -1,11 +1,11 @@
 'use client'; // Make this a client component
 
-import React, { useState, useEffect } from 'react'; // Import hooks
-import Link from 'next/link';
-import { ArrowRight } from 'lucide-react';
-import { createClient } from '@/lib/supabase/client'; // Import client-side Supabase client
+import React, { useState, useEffect } from 'react';
+// import Link from 'next/link'; // Removed unused import
+// import { ArrowRight } from 'lucide-react'; // Removed unused import
+import { createClient } from '@/lib/supabase/client';
 import FeatureCard from './FeatureCard';
-import FileUploadComponent from '../upload/FileUploadComponent'; // Import the actual component
+import FileUploadComponent from '../upload/FileUploadComponent';
 // import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -15,8 +15,7 @@ const Button = ({ className, children, ...props }: React.ButtonHTMLAttributes<HT
       {children}
     </button>
   );
-// @ts-ignore
-Button.defaultProps = { variant: "default", size: "default" };
+Button.defaultProps = { variant: "default", size: "default" }; // Removed @ts-ignore
 
 
 // Remove placeholder component definition

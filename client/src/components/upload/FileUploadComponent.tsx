@@ -1,14 +1,12 @@
-'use client'; // This component interacts with browser APIs (File API, fetch/axios)
-
-'use client'; // This component interacts with browser APIs (File API, fetch/axios, window.ethereum)
+'use client'; // Keep only one 'use client' at the top
 
 import React, { useState, useCallback, useEffect } from 'react';
 import axios from 'axios';
-import { ethers } from 'ethers'; // Import ethers
+import { ethers, Signer, Log, EventLog } from 'ethers'; // Import Log and EventLog types
 import { createClient } from '@/lib/supabase/client';
-import { UploadCloud, Loader2, CheckCircle, AlertCircle, Info, Wallet, Zap } from 'lucide-react'; // Add Wallet, Zap icons
+// Removed unused icons: Info, Zap
+import { UploadCloud, Loader2, CheckCircle, AlertCircle, Wallet } from 'lucide-react';
 import { cn } from '@/lib/utils';
-// Import the ABI - ensure the path is correct relative to this file
 import VeltisIPNFT_ABI from '../../../../server/src/config/VeltisIPNFT.abi.json'; // Adjust path as needed
 
 // TODO: Replace with actual Shadcn Button import if available after adding component
@@ -17,8 +15,7 @@ const Button = ({ className, children, ...props }: React.ButtonHTMLAttributes<HT
       {children}
     </button>
   );
-// @ts-ignore
-Button.defaultProps = { variant: "default", size: "default" };
+Button.defaultProps = { variant: "default", size: "default" }; // Removed @ts-ignore
 
 // Define more granular statuses for the multi-step process
 type UploadMintStatus =
@@ -75,37 +72,45 @@ const formatBytes = (bytes: number, decimals = 2): string => {
 const FREE_TIER_RECORD_LIMIT = 5;
 const FREE_TIER_STORAGE_LIMIT_BYTES = 100 * 1024 * 1024; // 100MB
 
+// Define a more specific type for the Ethereum provider injected by wallets
+type Eip1193Provider = ethers.Eip1193Provider & {
+    // Use any[] for listener args to avoid specific signature conflicts
+    on?: (event: string, listener: (...args: any[]) => void) => Eip1193Provider;
+    removeListener?: (event: string, listener: (...args: any[]) => void) => Eip1193Provider;
+};
+
+
 const FileUploadComponent: React.FC = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [status, setStatus] = useState<UploadMintStatus>('idle');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  // const [uploadResult, setUploadResult] = useState<UploadResult | null>(null); // Old result type
-  const [mintConfirmationResult, setMintConfirmationResult] = useState<MintConfirmationResponse | null>(null); // New result type
+  const [mintConfirmationResult, setMintConfirmationResult] = useState<MintConfirmationResponse | null>(null);
   const [profileData, setProfileData] = useState<{ ip_record_count: number; storage_used_bytes: number } | null>(null);
   const [loadingProfile, setLoadingProfile] = useState<boolean>(true);
   const [userId, setUserId] = useState<string | null>(null);
-  const [userAddress, setUserAddress] = useState<string | null>(null); // Store connected wallet address
-  const [provider, setProvider] = useState<ethers.BrowserProvider | null>(null);
-  const [signer, setSigner] = useState<ethers.Signer | null>(null);
-  const [mintTxHash, setMintTxHash] = useState<string | null>(null); // Add state for tx hash
+  const [userAddress, setUserAddress] = useState<string | null>(null);
+  // const [provider, setProvider] = useState<ethers.BrowserProvider | null>(null); // Removed unused provider state
+  const [signer, setSigner] = useState<Signer | null>(null);
+  const [mintTxHash, setMintTxHash] = useState<string | null>(null);
   const supabase = createClient();
 
   // --- Wallet Connection ---
   const connectWallet = useCallback(async () => {
-    if (typeof window.ethereum !== 'undefined') {
+    const ethereumProvider = window.ethereum as Eip1193Provider | undefined;
+
+    if (ethereumProvider) {
       try {
-        const browserProvider = new ethers.BrowserProvider(window.ethereum);
-        // Request account access
-        const accounts = await browserProvider.send("eth_requestAccounts", []);
-        const walletSigner = await browserProvider.getSigner();
-        setProvider(browserProvider);
+        const browserProvider = new ethers.BrowserProvider(ethereumProvider);
+        const accounts: string[] = await browserProvider.send("eth_requestAccounts", []);
+        const walletSigner: Signer = await browserProvider.getSigner();
         setSigner(walletSigner);
         setUserAddress(accounts[0]);
         console.log("Wallet connected:", accounts[0]);
-        setErrorMessage(null); // Clear any previous errors
-      } catch (error: any) {
-        console.error("Failed to connect wallet:", error);
-        setErrorMessage(`Failed to connect wallet: ${error?.message || 'Unknown error'}`);
+        setErrorMessage(null);
+      } catch (error: unknown) { // Use unknown
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        console.error("Failed to connect wallet:", errorMsg);
+        setErrorMessage(`Failed to connect wallet: ${errorMsg || 'Unknown error'}`);
         setStatus('error');
         setSigner(null);
         setUserAddress(null);
@@ -116,65 +121,63 @@ const FileUploadComponent: React.FC = () => {
     }
   }, []);
 
-  // Effect to check connection on load (optional, depends on desired UX)
+  // Effect to check connection on load and handle account changes
   useEffect(() => {
+    const ethereumProvider = window.ethereum as Eip1193Provider | undefined;
+
     const checkConnection = async () => {
-       if (typeof window.ethereum !== 'undefined') {
-           const browserProvider = new ethers.BrowserProvider(window.ethereum);
+       if (ethereumProvider) {
+           const browserProvider = new ethers.BrowserProvider(ethereumProvider);
            const accounts = await browserProvider.listAccounts();
            if (accounts.length > 0) {
-               const walletSigner = await browserProvider.getSigner();
-               setProvider(browserProvider);
+               const walletSigner: Signer = await browserProvider.getSigner();
                setSigner(walletSigner);
-               setUserAddress(accounts[0].address); // Access address property
-               console.log("Wallet already connected:", accounts[0].address);
+               const currentAddress = accounts[0].address;
+               setUserAddress(currentAddress);
+               console.log("Wallet already connected:", currentAddress);
            }
        }
     };
     checkConnection();
 
+    // Define the account change handler separately
+    const handleAccountsChanged = (accounts: string[]) => { // Type accounts explicitly
+        console.log("Accounts changed:", accounts);
+        if (accounts.length > 0) {
+            connectWallet(); // Reconnect with the new account
+        } else {
+            setSigner(null);
+            setUserAddress(null);
+            console.log("Wallet disconnected");
+        }
+    };
+
     // Listen for account changes
-    const ethProvider = window.ethereum as any; // Cast to any to access .on
-    if (ethProvider) {
-        ethProvider.on('accountsChanged', (accounts: string[]) => {
-            console.log("Accounts changed:", accounts);
-            if (accounts.length > 0) {
-                connectWallet(); // Reconnect with the new account
-            } else {
-                // Handle disconnection
-                setSigner(null);
-                setUserAddress(null);
-                setProvider(null);
-                console.log("Wallet disconnected");
-            }
-        });
+    if (ethereumProvider?.on) {
+        ethereumProvider.on('accountsChanged', handleAccountsChanged);
     }
 
     // Cleanup listener on unmount
     return () => {
-        const currentEthProvider = window.ethereum as any; // Cast again for cleanup
-        if (currentEthProvider?.removeListener) {
-            // Use a stable function reference or define the handler outside if needed for removal
-            // For simplicity here, assuming connectWallet reference is stable enough or handle differently if issues arise
-            // A more robust way might involve defining the handler function separately.
+        if (ethereumProvider?.removeListener) {
              try {
-                 currentEthProvider.removeListener('accountsChanged', connectWallet);
+                 ethereumProvider.removeListener('accountsChanged', handleAccountsChanged);
                  console.log("Removed accountsChanged listener.");
-             } catch (e) {
-                 console.warn("Could not remove accountsChanged listener:", e);
+             } catch (error: unknown) { // Use unknown
+                 const errorMsg = error instanceof Error ? error.message : String(error);
+                 console.warn("Could not remove accountsChanged listener:", errorMsg);
              }
         }
     };
 
-  }, [connectWallet]); // connectWallet is stable due to useCallback
+  }, [connectWallet]);
 
 
   // --- Fetch User Profile Data ---
   useEffect(() => {
-    // Renamed function to avoid conflict
     const fetchSupabaseUserData = async () => {
       setLoadingProfile(true);
-      setStatus('checkingLimits'); // Indicate loading state
+      setStatus('checkingLimits');
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         setUserId(user.id);
@@ -187,41 +190,30 @@ const FileUploadComponent: React.FC = () => {
         if (error) {
           console.error("Error fetching profile:", error);
           setErrorMessage("Could not load your usage data.");
-          setStatus('error'); // Set error status if profile fetch fails
+          setStatus('error');
         } else if (data) {
           setProfileData(data);
         } else {
-             // Handle case where profile might not exist yet (though trigger should prevent this)
              console.warn("Profile data not found for user:", user.id);
-             setProfileData({ ip_record_count: 0, storage_used_bytes: 0 }); // Assume defaults if not found
+             setProfileData({ ip_record_count: 0, storage_used_bytes: 0 });
         }
       } else {
           setUserId(null);
           setProfileData(null);
       }
       setLoadingProfile(false);
-      setStatus('idle'); // Reset status after loading
+      setStatus('idle');
     };
 
     fetchSupabaseUserData();
-
-    // Optional: Listen for auth changes if needed, though this component
-    // should only be rendered when logged in based on parent logic.
-    // const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
-    //   fetchUserData(); // Re-fetch on auth change
-    // });
-
-    // return () => {
-    //   authListener?.subscription.unsubscribe();
-    // };
-  }, [supabase]); // Dependency array includes supabase client instance
+  }, [supabase]);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
       setSelectedFile(event.target.files[0]);
       setStatus('idle');
       setErrorMessage(null);
-      setMintConfirmationResult(null); // Reset result
+      setMintConfirmationResult(null);
     }
   };
 
@@ -229,8 +221,6 @@ const FileUploadComponent: React.FC = () => {
   const recordsLimitReached = profileData ? profileData.ip_record_count >= FREE_TIER_RECORD_LIMIT : false;
   const storageLimitReached = profileData && selectedFile ? (profileData.storage_used_bytes + selectedFile.size) > FREE_TIER_STORAGE_LIMIT_BYTES : false;
   const isOverLimit = recordsLimitReached || storageLimitReached;
-  // TODO: Add check for paid user status here later
-  // Simplified button disabling logic based on feedback
   const isButtonDisabled = !selectedFile || !signer || !userAddress || ![ 'idle', 'success', 'error'].includes(status);
 
 
@@ -250,9 +240,8 @@ const FileUploadComponent: React.FC = () => {
     setStatus('uploadingFile');
     setErrorMessage(null);
     setMintConfirmationResult(null);
-    setMintTxHash(null); // Reset tx hash state
+    setMintTxHash(null);
     let prepareMintData: PrepareMintResponse | null = null;
-    // let mintTxHash: string | null = null; // Moved to state
     let mintedTokenId: string | null = null;
 
     try {
@@ -291,26 +280,28 @@ const FileUploadComponent: React.FC = () => {
 
       console.log(`Attempting to mint with URI: ${prepareMintData.tokenUri} to address: ${userAddress}`);
       const mintTransaction = await contract.safeMint(userAddress, prepareMintData.tokenUri);
-      setMintTxHash(mintTransaction.hash); // Set state variable
+      setMintTxHash(mintTransaction.hash);
       console.log('Mint transaction sent:', mintTransaction.hash);
       setStatus('minting');
 
-      const receipt = await mintTransaction.wait(1); // Wait for 1 confirmation
+      const receipt = await mintTransaction.wait(1);
       if (!receipt) throw new Error('Mint transaction receipt not received.');
       console.log('Mint transaction confirmed:', receipt.hash);
 
       // Find the Transfer event to get the tokenId
-      const transferEvent = receipt.logs?.find((log: any) => {
+      const transferEvent = receipt?.logs?.find((log: Log | EventLog): log is EventLog => {
           try {
-              const parsedLog = contract.interface.parseLog(log);
-              // Minting emits Transfer from address(0)
+              if (!('topics' in log) || !('data' in log)) return false;
+              const parsedLog = contract.interface.parseLog({ topics: log.topics as string[], data: log.data });
               return parsedLog?.name === 'Transfer' && parsedLog?.args.from === ethers.ZeroAddress;
           } catch { return false; }
       });
 
-      if (!transferEvent) throw new Error('Could not find Transfer event in mint receipt.');
+      if (!transferEvent || !('topics' in transferEvent) || !('data' in transferEvent)) {
+          throw new Error('Could not find valid Transfer event in mint receipt.');
+      }
 
-      const parsedLog = contract.interface.parseLog(transferEvent as ethers.Log); // Type assertion
+      const parsedLog = contract.interface.parseLog({ topics: transferEvent.topics as string[], data: transferEvent.data });
       mintedTokenId = parsedLog?.args.tokenId.toString();
       console.log('Minted Token ID:', mintedTokenId);
 
@@ -319,18 +310,18 @@ const FileUploadComponent: React.FC = () => {
 
       // --- Step 3: Confirm Mint with Backend ---
       setStatus('confirmingBackend');
-      const metadataCid = prepareMintData.tokenUri.replace('ipfs://', ''); // Extract CID
-      const currentMintTxHash = mintTransaction.hash; // Use hash from the transaction object
+      const metadataCid = prepareMintData.tokenUri.replace('ipfs://', '');
+      const currentMintTxHash = mintTransaction.hash;
 
       const confirmationPayload: MintConfirmationPayload = {
-        txHash: currentMintTxHash, // Use the hash from the sent transaction
+        txHash: currentMintTxHash,
         tokenId: mintedTokenId,
         fileHash: prepareMintData.fileHash,
         fileCid: prepareMintData.fileCid,
         metadataCid: metadataCid,
         originalFilename: prepareMintData.originalFilename,
-        mimeType: selectedFile.type, // Get from selected file
-        sizeBytes: selectedFile.size, // Get from selected file
+        mimeType: selectedFile.type,
+        sizeBytes: selectedFile.size,
       };
 
       const confirmResponse = await axios.post<MintConfirmationResponse>('/api/files/confirm-mint', confirmationPayload, {
@@ -349,7 +340,6 @@ const FileUploadComponent: React.FC = () => {
       setMintConfirmationResult(confirmResponse.data);
       console.log('Mint confirmation successful:', confirmResponse.data);
 
-      // Refresh profile data after successful mint confirmation
       if (userId) {
         const { data, error } = await supabase
           .from('profiles')
@@ -359,11 +349,21 @@ const FileUploadComponent: React.FC = () => {
         if (!error && data) setProfileData(data);
       }
 
-    } catch (error: any) {
+    } catch (error: unknown) { // Use unknown
       console.error('Minting process error:', error);
       setStatus('error');
-      // Provide more specific error messages based on the step?
-      setErrorMessage(error.response?.data?.message || error.message || 'An unknown error occurred during the minting process.');
+      let displayError = 'An unknown error occurred during the minting process.';
+       if (axios.isAxiosError(error) && error.response?.data) {
+             try {
+                const errorJson = JSON.parse(await (error.response.data as Blob).text());
+                if (errorJson.message) displayError = errorJson.message;
+             } catch { // Removed unused variable
+                 if (error instanceof Error && error.message) displayError = error.message;
+             }
+        } else if (error instanceof Error) {
+            displayError = error.message;
+        }
+      setErrorMessage(displayError);
     }
   };
 
@@ -374,7 +374,6 @@ const FileUploadComponent: React.FC = () => {
       case 'uploadingFile': return 'Uploading file...';
       case 'preparingMetadata': return 'Preparing metadata on IPFS...';
       case 'waitingForSignature': return 'Please confirm mint transaction in your wallet...';
-      // Access mintTxHash from state here
       case 'minting': return `Minting IPNFT on Polygon (Tx: ${mintTxHash ? mintTxHash.substring(0, 10) + '...' : 'Sending'})...`;
       case 'confirmingBackend': return 'Saving record...';
       case 'success': return 'IPNFT Created Successfully!';
@@ -386,7 +385,6 @@ const FileUploadComponent: React.FC = () => {
   return (
     <div className="w-full p-4 border border-border rounded-lg bg-card text-card-foreground">
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* TODO: [Access Control] Add UI elements here for user to define access conditions (e.g., dropdown, address input) before upload */}
         <label htmlFor="file-upload" className="block text-sm font-medium mb-1">
           Select File to Timestamp
         </label>
@@ -397,7 +395,6 @@ const FileUploadComponent: React.FC = () => {
                     <p className="mb-1 text-sm text-muted-foreground">
                         <span className="font-semibold">Click to upload</span> or drag and drop
                     </p>
-                    {/* <p className="text-xs text-muted-foreground">SVG, PNG, JPG or GIF (MAX. 800x400px)</p> */}
                 </div>
                 <input id="file-upload" type="file" className="hidden" onChange={handleFileChange} />
             </label>
@@ -406,7 +403,6 @@ const FileUploadComponent: React.FC = () => {
           <p className="text-sm text-muted-foreground">Selected: {selectedFile.name} ({(selectedFile.size / 1024).toFixed(2)} KB)</p>
         )}
 
-        {/* Wallet Connect Button */}
         {!userAddress && (
             <Button
                 type="button"
@@ -421,18 +417,16 @@ const FileUploadComponent: React.FC = () => {
              <p className="text-xs text-muted-foreground text-center truncate">Connected: {userAddress}</p>
         )}
 
-        {/* Submit Button */}
         <Button
           type="submit"
           disabled={isButtonDisabled}
-          className="w-full bio-button justify-center" // Assuming bio-button provides styling
+          className="w-full bio-button justify-center"
         >
           { (status !== 'idle' && status !== 'success' && status !== 'error') && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {getStatusMessage()}
         </Button>
       </form>
 
-      {/* Usage Info & Limit Warnings */}
       {!loadingProfile && profileData && (
         <div className="mt-3 text-xs text-muted-foreground space-y-1">
             <p>Records Used: {profileData.ip_record_count} / {FREE_TIER_RECORD_LIMIT} (Lifetime)</p>
@@ -448,7 +442,7 @@ const FileUploadComponent: React.FC = () => {
                  </p>
             )}
              {isOverLimit && (
-                 <p className="text-primary font-medium">Please upgrade to the Startup plan for higher limits.</p> // TODO: Link to /pricing
+                 <p className="text-primary font-medium">Please upgrade to the Startup plan for higher limits.</p>
              )}
         </div>
       )}
@@ -456,8 +450,6 @@ const FileUploadComponent: React.FC = () => {
            <p className="mt-3 text-xs text-muted-foreground">Loading usage data...</p>
        )}
 
-
-      {/* Status Messages */}
       {status === 'success' && mintConfirmationResult && (
         <div className="mt-4 p-3 rounded-md bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300">
           <div className="flex items-center gap-2">
@@ -466,8 +458,6 @@ const FileUploadComponent: React.FC = () => {
           </div>
           <p className="text-sm mt-1">IPNFT minted successfully (Token ID: {mintConfirmationResult.tokenId}). Record saved.</p>
           <p className="text-xs mt-1 truncate">Mint Tx: {mintConfirmationResult.txHash}</p>
-          {/* Optionally add link to PolygonScan */}
-          {/* <a href={`https://polygonscan.com/tx/${mintConfirmationResult.txHash}`} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline">View on PolygonScan</a> */}
         </div>
       )}
       {status === 'error' && errorMessage && (

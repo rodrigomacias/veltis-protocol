@@ -49,7 +49,7 @@ export default function AuthForm() {
 
     // Cleanup subscription on component unmount
     return () => subscription.unsubscribe();
-  }, [supabase]); // Re-run effect if supabase client instance changes (shouldn't normally)
+  }, [supabase, router]); // Add router to dependency array
 
   // If session exists, maybe show user info or a logout button instead
   if (session) {

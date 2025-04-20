@@ -10,8 +10,7 @@ const Button = ({ className, children, ...props }: React.ButtonHTMLAttributes<HT
       {children}
     </button>
   );
-// @ts-ignore
-Button.defaultProps = { variant: "default", size: "default" };
+Button.defaultProps = { variant: "default", size: "default" }; // Removed @ts-ignore
 
 
 interface FeatureCardProps {
@@ -56,11 +55,13 @@ const FeatureCard: React.FC<FeatureCardProps> = ({
           {/* Allow embedding custom children like the file uploader */}
           {children}
         </div>
-        {/* CTA Button */}
-        <Button variant="outline" className="bio-button group mt-4 self-start"> {/* Use custom class */}
-          {ctaText}
-          <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-        </Button>
+        {/* CTA Button wrapped in Link */}
+        <Link href={ctaHref} className="mt-4 self-start">
+            <Button variant="outline" className="bio-button group"> {/* Use custom class */}
+              {ctaText}
+              <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+            </Button>
+        </Link>
       </div>
 
       {/* Image Area (Optional) */}

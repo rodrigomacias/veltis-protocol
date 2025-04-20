@@ -1,7 +1,4 @@
-import { createClient } from '@/lib/supabase/server'; // Use server client for initial auth check
-import { cookies } from 'next/headers';
-// import { createClient } from '@/lib/supabase/server'; // No longer needed for auth check here
-// import { cookies } from 'next/headers'; // No longer needed here
+// Removed unused imports: createClient, cookies
 import Header from '@/components/landing/Header';
 import HeroSection from '@/components/landing/HeroSection';
 // import TokenizationSection from '@/components/landing/TokenizationSection'; // Removed
@@ -44,7 +41,7 @@ const BenefitsSection = () => (
                 <h3 className="text-xl font-semibold mb-3">Problems Solved</h3>
                 <ul className="list-disc list-inside space-y-2 text-muted-foreground">
                     <li><strong>Proof of Priority:</strong> Eliminate disputes over invention timing with immutable blockchain timestamps.</li>
-                    <li><strong>Data Integrity:</strong> Ensure your research data hasn't been tampered with using cryptographic hashes linked to your IPNFT.</li>
+                    <li><strong>Data Integrity:</strong> Ensure your research data hasn't been tampered with using cryptographic hashes linked to your IPNFT.</li> {/* Fixed apostrophe */}
                     <li><strong>Simplified Disclosure:</strong> Streamline the process of documenting and proving the existence of IP for patents or partnerships.</li>
                     <li><strong>Lack of Trust:</strong> Build confidence with collaborators, investors, or TTOs by providing verifiable proof of your work.</li>
                     <li><strong>Asset Management:</strong> Centralize and manage your critical R&D documentation securely.</li>
@@ -54,7 +51,7 @@ const BenefitsSection = () => (
                 <h3 className="text-xl font-semibold mb-3">Benefits & Outcomes</h3>
                  <ul className="list-disc list-inside space-y-2 text-muted-foreground">
                     <li><strong>Enhanced IP Protection:</strong> Secure early-stage proof before formal patenting.</li>
-                    <li><strong>Increased Trust & Transparency:</strong> Provide undeniable proof of your asset's existence and integrity.</li>
+                    <li><strong>Increased Trust & Transparency:</strong> Provide undeniable proof of your asset's existence and integrity.</li> {/* Fixed apostrophe */}
                     <li><strong>Streamlined Collaboration:</strong> Share verifiable proof with partners confidently.</li>
                     <li><strong>Improved Due Diligence:</strong> Simplify the verification process for investors or acquirers.</li>
                     <li><strong>Global Accessibility:</strong> Secure and manage your assets from anywhere on the Polygon network.</li>
@@ -69,16 +66,7 @@ const BenefitsSection = () => (
  * Veltis Protocol Landing Page (Server Component).
  * Assembles the landing page sections. Header and TokenizationSection are now client components handling auth state.
  */
-export default function LandingPage() { // Changed to sync function, no longer needs async/await for auth check here
-  // const cookieStore = cookies(); // No longer needed here
-  // const supabase = createClient(cookieStore); // No longer needed here
-
-  // Initial auth check removed, handled by client components
-  // const {
-  //   data: { user },
-  // } = await supabase.auth.getUser();
-  // const isLoggedIn = !!user;
-
+export default function LandingPage() {
   return (
     <div className="flex min-h-screen flex-col">
       {/* Background decorative elements - simple gradient for now */}

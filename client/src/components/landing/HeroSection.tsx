@@ -10,8 +10,7 @@ const Button = ({ className, children, ...props }: React.ButtonHTMLAttributes<HT
       {children}
     </button>
   );
-// @ts-ignore
-Button.defaultProps = { variant: "default", size: "default" };
+Button.defaultProps = { variant: "default", size: "default" }; // Removed @ts-ignore
 
 
 const HeroSection: React.FC = () => {

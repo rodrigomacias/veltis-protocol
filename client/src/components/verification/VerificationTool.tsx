@@ -2,7 +2,8 @@
 
 import React, { useState } from 'react';
 import axios from 'axios';
-import { UploadCloud, Loader2, CheckCircle, AlertCircle, Search, Hash } from 'lucide-react';
+// Removed unused Search, Hash icons
+import { UploadCloud, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 // import { Button } from '@/components/ui/button';
 // import { Input } from '@/components/ui/input';
@@ -14,8 +15,7 @@ const Button = ({ className, children, ...props }: React.ButtonHTMLAttributes<HT
       {children}
     </button>
 );
-// @ts-ignore
-Button.defaultProps = { variant: "default", size: "default" };
+Button.defaultProps = { variant: "default", size: "default" }; // Removed @ts-ignore
 const Input = ({ className, ...props }: React.InputHTMLAttributes<HTMLInputElement>) => (
     <input className={cn("flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50", className)} {...props} />
 );
@@ -32,7 +32,7 @@ interface VerificationResult {
     assetName: string;
     status: string;
     timestamp: string;
-    anchoringTxHash: string | null;
+    anchoringTxHash: string | null; // Note: This might be mintingTxHash now
     nftContractAddress: string | null;
     nftTokenId: string | null;
     metadataCid: string | null;
@@ -110,15 +110,22 @@ const VerificationTool: React.FC = () => {
         throw new Error(response.data?.message || 'Verification failed with status: ' + response.status);
       }
 
-    } catch (error: any) {
+    } catch (error: unknown) { // Use unknown type for error
       console.error('Verification error:', error);
-      if (error.response?.status === 404) {
-          setStatus('not_found');
-          setErrorMessage(error.response?.data?.message || 'Record not found.');
-      } else {
+      let displayError = 'An unknown error occurred during verification.';
+      if (axios.isAxiosError(error)) { // Check if it's an Axios error
+          if (error.response?.status === 404) {
+              setStatus('not_found');
+              displayError = error.response?.data?.message || 'Record not found.';
+          } else {
+              setStatus('error');
+              displayError = error.response?.data?.message || error.message;
+          }
+      } else if (error instanceof Error) {
           setStatus('error');
-          setErrorMessage(error.response?.data?.message || error.message || 'An unknown error occurred during verification.');
+          displayError = error.message;
       }
+      setErrorMessage(displayError);
     }
   };
 
@@ -131,19 +138,20 @@ const VerificationTool: React.FC = () => {
   // Helper to create explorer links (adjust base URLs as needed)
   const getExplorerLink = (type: 'tx' | 'address' | 'token', value: string | null | undefined): string | null => {
       if (!value) return null;
-      // TODO: Use env variables for base URLs
-      const polygonScanBase = "https://polygonscan.com"; // Or Mumbai testnet
+      // TODO: Use env variables for base URLs and network name
+      const amoyScanBase = "https://amoy.polygonscan.com"; // Use Amoy explicitly
+      const contractAddress = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS ?? ''; // Get contract address
       switch(type) {
-          case 'tx': return `${polygonScanBase}/tx/${value}`;
-          case 'address': return `${polygonScanBase}/address/${value}`;
-          case 'token': return `${polygonScanBase}/token/${process.env.NEXT_PUBLIC_CONTRACT_ADDRESS}?a=${value}`; // Assumes contract address is in env
+          case 'tx': return `${amoyScanBase}/tx/${value}`;
+          case 'address': return `${amoyScanBase}/address/${value}`;
+          case 'token': return contractAddress ? `${amoyScanBase}/nft/${contractAddress}/${value}` : null; // Use correct NFT path
           default: return null;
       }
   }
   const getIpfsLink = (cid: string | null | undefined): string | null => {
       if (!cid) return null;
       // TODO: Use env variable for preferred gateway
-      return `https://ipfs.io/ipfs/${cid}`;
+      return `https://gateway.pinata.cloud/ipfs/${cid}`; // Use Pinata gateway
   }
 
 
@@ -227,7 +235,8 @@ const VerificationTool: React.FC = () => {
                     <p className="font-mono"><strong>File SHA-256:</strong> {result.fileHash}</p>
                     <p><strong>File IPFS CID:</strong> <ExternalLink href={getIpfsLink(result.fileCid)}>{result.fileCid}</ExternalLink></p>
                     <p><strong>Metadata IPFS CID:</strong> <ExternalLink href={getIpfsLink(result.metadataCid)}>{result.metadataCid}</ExternalLink></p>
-                    <p><strong>Anchor TX:</strong> <ExternalLink href={getExplorerLink('tx', result.anchoringTxHash)}>{result.anchoringTxHash}</ExternalLink></p>
+                    {/* Display Minting TX Hash instead of Anchoring */}
+                    <p><strong>Minting TX Hash:</strong> <ExternalLink href={getExplorerLink('tx', result.anchoringTxHash)}>{result.anchoringTxHash}</ExternalLink></p>
                     <p><strong>NFT Contract:</strong> <ExternalLink href={getExplorerLink('address', result.nftContractAddress)}>{result.nftContractAddress}</ExternalLink></p>
                     <p><strong>NFT Token ID:</strong> <ExternalLink href={getExplorerLink('token', result.nftTokenId)}>{result.nftTokenId}</ExternalLink></p>
                 </div>

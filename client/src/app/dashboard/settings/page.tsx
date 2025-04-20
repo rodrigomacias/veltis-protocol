@@ -3,10 +3,11 @@
 'use client';
 
 import Sidebar from '@/components/dashboard/Sidebar';
-import { cn } from '@/lib/utils'; // Import cn if needed for Button styling
+import { cn } from '@/lib/utils';
 
 // TODO: Replace with actual Shadcn components later
-const Input = ({ label, id, ...props }: any) => (
+// Define more specific props type for Input if possible, using React.InputHTMLAttributes
+const Input = ({ label, id, ...props }: { label: string, id: string } & React.InputHTMLAttributes<HTMLInputElement>) => (
     <div>
         <label htmlFor={id} className="block text-sm font-medium text-foreground mb-1">{label}</label>
         <input id={id} className="block w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50" {...props} />
@@ -17,10 +18,9 @@ const Button = ({ className, children, ...props }: React.ButtonHTMLAttributes<HT
       {children}
     </button>
   );
-// @ts-ignore
-Button.defaultProps = { variant: "default", size: "default" };
+Button.defaultProps = { variant: "default", size: "default" }; // Removed @ts-ignore
 
-const Switch = ({ label, id }: { label: string, id: string }) => ( // Basic Switch placeholder
+const Switch = ({ label, id }: { label: string, id: string }) => (
     <div className="flex items-center justify-between">
         <label htmlFor={id} className="text-sm font-medium text-foreground">{label}</label>
         <button id={id} role="switch" aria-checked="false" className="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-muted transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50">

@@ -1,11 +1,14 @@
 'use client'; // Make this a client component
 
+'use client'; // Make this a client component
+
 import Link from 'next/link';
-import { useRouter } from 'next/navigation'; // Import useRouter for redirection
-import React, { useState, useEffect } from 'react'; // Import hooks
-import { Search, User, Settings, LogOut, PlusCircle, LayoutDashboard } from 'lucide-react'; // Added LayoutDashboard
+import { useRouter } from 'next/navigation';
+import React, { useState, useEffect } from 'react';
+// Removed unused icons: Search, Settings, PlusCircle
+import { User, LogOut, LayoutDashboard } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { createClient } from '@/lib/supabase/client'; // Import client-side Supabase client
+import { createClient } from '@/lib/supabase/client';
 
 // TODO: Replace with actual Shadcn Button import if available after adding component
 const Button = ({ className, children, ...props }: React.ButtonHTMLAttributes<HTMLButtonElement>) => (
@@ -121,8 +124,7 @@ const Header: React.FC = () => { // Remove props
 };
 
 // Add Button variants if not using Shadcn Button component yet
-// @ts-ignore
-Button.defaultProps = {
+Button.defaultProps = { // Removed @ts-ignore
     variant: "default",
     size: "default",
 };
