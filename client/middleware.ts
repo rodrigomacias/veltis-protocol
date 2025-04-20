@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server'
-import { createClient } from '@/lib/supabase/middleware' // Import middleware client
+import { createClient } from './src/lib/supabase/middleware' // Use relative path for Edge compatibility
 
 export async function middleware(request: NextRequest) {
   const { supabase, response } = createClient(request)
