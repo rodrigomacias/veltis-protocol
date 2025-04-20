@@ -2,6 +2,10 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /* config options here */
+  // Disable lightningcss to avoid Vercel build failures
+  experimental: {
+    useLightningcss: false,
+  },
   // Add rewrites to proxy API requests to the backend during development
   async rewrites() {
     // Ensure the backend URL is correctly read from the environment variable
