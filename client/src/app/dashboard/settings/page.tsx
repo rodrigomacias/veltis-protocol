@@ -2,22 +2,29 @@
 
 'use client';
 
-import Sidebar from '@/components/dashboard/Sidebar';
-import { cn } from '@/lib/utils'; // Import cn if needed for Button styling
+import Sidebar from '@/components/dashboard/Sidebar'; // Keep only one import
+import { cn } from '@/lib/utils';
+import React from 'react'; // Import React for types
 
 // TODO: Replace with actual Shadcn components later
-const Input = ({ label, id, ...props }: any) => (
+// Define more specific props for Input
+interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+    label: string;
+    id: string;
+}
+const Input = ({ label, id, ...props }: InputProps) => (
     <div>
         <label htmlFor={id} className="block text-sm font-medium text-foreground mb-1">{label}</label>
         <input id={id} className="block w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50" {...props} />
     </div>
 );
+
 const Button = ({ className, children, ...props }: React.ButtonHTMLAttributes<HTMLButtonElement>) => (
     <button className={cn("inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50", className)} {...props}>
       {children}
     </button>
   );
-// @ts-ignore
+// Removed unused @ts-expect-error
 Button.defaultProps = { variant: "default", size: "default" };
 
 const Switch = ({ label, id }: { label: string, id: string }) => ( // Basic Switch placeholder

@@ -8,17 +8,36 @@ vi.mock('@/lib/supabase/client', () => ({
   createClient: vi.fn(),
 }));
 
+import type { SupabaseClient, Session, AuthChangeEvent, Subscription } from '@supabase/supabase-js'; // Import more types
+// Removed AuthProps import as it might not be exported
+
+// Mock the Supabase client module
+vi.mock('@/lib/supabase/client', () => ({
+  createClient: vi.fn(),
+}));
+
 // Mock the Supabase Auth UI component
 vi.mock('@supabase/auth-ui-react', () => ({
-  Auth: (props: any) => (
+  // Define a simple inline type for the mock props
+  Auth: (props?: { view?: string }) => (
     <div data-testid="supabase-auth-ui">
-      Mock Supabase Auth UI - View: {props.view}
+      Mock Supabase Auth UI - View: {props?.view ?? 'sign_in'} {/* Default to sign_in */}
     </div>
   ),
 }));
 
+// Define a partial mock type for the client for easier mocking using Vitest types
+// Ensure Vitest types are available (e.g., via tsconfig or explicit import if needed)
+type MockSupabaseClient = {
+    auth: {
+        getSession: import('vitest').Mock;
+        onAuthStateChange: import('vitest').Mock;
+        signOut: import('vitest').Mock;
+    };
+};
+
 describe('AuthForm Component', () => {
-  let mockSupabaseClient: any;
+  let mockSupabaseClient: MockSupabaseClient;
 
   beforeEach(() => {
     // Reset mocks before each test
@@ -58,10 +77,13 @@ describe('AuthForm Component', () => {
       data: { session: mockSession },
     });
     // Mock onAuthStateChange to immediately provide the session
-    mockSupabaseClient.auth.onAuthStateChange.mockImplementation((callback) => {
-        callback('SIGNED_IN', mockSession); // Simulate immediate sign-in state
-        return { data: { subscription: { unsubscribe: vi.fn() } } };
-    });
+    // Add types for callback parameters
+    mockSupabaseClient.auth.onAuthStateChange.mockImplementation(
+        (callback: (event: AuthChangeEvent, session: Session | null) => void) => {
+            callback('SIGNED_IN', mockSession as Session); // Simulate immediate sign-in state
+            return { data: { subscription: { unsubscribe: vi.fn() } } };
+        }
+    );
 
 
     render(<AuthForm />);
@@ -78,10 +100,12 @@ describe('AuthForm Component', () => {
      // Arrange: Mock getSession to return a session
      const mockSession = { user: { email: 'test@example.com', id: '123' } };
      mockSupabaseClient.auth.getSession.mockResolvedValue({ data: { session: mockSession } });
-     mockSupabaseClient.auth.onAuthStateChange.mockImplementation((callback) => {
-         callback('SIGNED_IN', mockSession);
-         return { data: { subscription: { unsubscribe: vi.fn() } } };
-     });
+     mockSupabaseClient.auth.onAuthStateChange.mockImplementation(
+        (callback: (event: AuthChangeEvent, session: Session | null) => void) => {
+            callback('SIGNED_IN', mockSession as Session);
+            return { data: { subscription: { unsubscribe: vi.fn() } } };
+        }
+     );
 
     render(<AuthForm />);
 

@@ -28,8 +28,10 @@ export async function GET(request: Request) {
         // Redirect to an error page or login page with an error message
         return NextResponse.redirect(`${origin}/login?error=Could not authenticate user`);
       }
-    } catch (catchError: any) {
-        console.error('Auth Callback Exception:', catchError.message);
+    } catch (catchError: unknown) { // Type as unknown
+        // Check if it's an Error instance before accessing message
+        const errorMessage = catchError instanceof Error ? catchError.message : String(catchError);
+        console.error('Auth Callback Exception:', errorMessage);
         return NextResponse.redirect(`${origin}/login?error=Server error during authentication`);
     }
   } else {

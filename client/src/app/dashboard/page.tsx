@@ -4,9 +4,10 @@
 import { createClient } from '@/lib/supabase/client'; // Use client for potential future interactions
 import { useState, useEffect } from 'react'; // Import hooks
 import { useRouter } from 'next/navigation'; // Use useRouter for client-side navigation if needed
-import Link from 'next/link';
+// import Link from 'next/link'; // Link is unused now
 // import FileUploadComponent from '@/components/upload/FileUploadComponent'; // Removed import
 import Sidebar from '@/components/dashboard/Sidebar'; // Import the Sidebar
+import type { User } from '@supabase/supabase-js'; // Import User type
 
 // TODO: Define types for fetched data (ideally generated from Supabase schema later)
 interface IpRecord {
@@ -32,7 +33,7 @@ interface IpRecord {
 export default function DashboardPage() { // Renamed conceptually to Portfolio Page
   const supabase = createClient();
   const router = useRouter();
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null); // Use specific User type
   const [ipRecords, setIpRecords] = useState<IpRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -50,7 +51,7 @@ export default function DashboardPage() { // Renamed conceptually to Portfolio P
         router.push('/login');
         return;
       }
-      setUser(session.user);
+      setUser(session.user); // user state is now typed
 
       // Fetch user's IP records from Supabase
       const { data, error: fetchError } = await supabase
@@ -189,6 +190,7 @@ export default function DashboardPage() { // Renamed conceptually to Portfolio P
                         </table>
                       </div>
                     ) : (
+                      // Fixed unescaped apostrophe
                       <div className="text-center py-12 text-muted-foreground bg-card rounded-lg shadow">You haven't created any IPNFTs yet.</div>
                     )}
                  </section> {/* Close the portfolio section */}

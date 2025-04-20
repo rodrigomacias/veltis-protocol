@@ -3,7 +3,8 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation'; // Import useRouter for redirection
 import React, { useState, useEffect } from 'react'; // Import hooks
-import { Search, User, Settings, LogOut, PlusCircle, LayoutDashboard } from 'lucide-react'; // Added LayoutDashboard
+// Removed unused icons: Search, Settings, PlusCircle
+import { User, LogOut, LayoutDashboard } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client'; // Import client-side Supabase client
 
@@ -13,6 +14,13 @@ const Button = ({ className, children, ...props }: React.ButtonHTMLAttributes<HT
     {children}
   </button>
 );
+
+// Removed unused @ts-expect-error
+Button.defaultProps = {
+    variant: "default",
+    size: "default",
+};
+
 
 // Remove HeaderProps interface as isLoggedIn prop is no longer needed
 // interface HeaderProps {
@@ -72,7 +80,7 @@ const Header: React.FC = () => { // Remove props
         {/* <div className="flex justify-center"> ... </div> */}
 
         {/* Right Nav: Conditional Buttons - Use flex-1 and justify-end */}
-        <div className="flex items-center space-x-2">
+        <div className="flex flex-1 items-center justify-end space-x-2"> {/* Added flex-1 and justify-end */}
           {/* Auth Buttons - Render based on client-side state */}
           {isLoadingAuth ? (
             // Show loading indicator
@@ -118,13 +126,6 @@ const Header: React.FC = () => { // Remove props
       </div>
     </header>
   );
-};
-
-// Add Button variants if not using Shadcn Button component yet
-// @ts-ignore
-Button.defaultProps = {
-    variant: "default",
-    size: "default",
 };
 
 export default Header;

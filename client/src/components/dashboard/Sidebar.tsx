@@ -1,10 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation'; // Import useRouter
-import { LayoutDashboard, Settings, User, Wallet, FolderKanban, BarChart3, PlusSquare, LogOut } from 'lucide-react'; // Added LogOut
+import { usePathname, useRouter } from 'next/navigation';
+// Remove unused icons: LayoutDashboard, User, Wallet, BarChart3
+import { Settings, FolderKanban, PlusSquare, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { createClient } from '@/lib/supabase/client'; // Import supabase client
+import { createClient } from '@/lib/supabase/client';
 
 // TODO: Replace with actual Shadcn Button import if available
 const Button = ({ className, children, ...props }: React.ButtonHTMLAttributes<HTMLButtonElement>) => (
@@ -12,7 +13,7 @@ const Button = ({ className, children, ...props }: React.ButtonHTMLAttributes<HT
       {children}
     </button>
   );
-// @ts-ignore
+// Removed unused @ts-expect-error
 Button.defaultProps = { variant: "ghost", size: "default" };
 
 // Define a type for navigation items

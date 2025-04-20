@@ -2,7 +2,8 @@
 
 import React, { useState } from 'react';
 import axios from 'axios';
-import { UploadCloud, Loader2, CheckCircle, AlertCircle, Search, Hash } from 'lucide-react';
+// Removed unused icons: Search, Hash
+import { UploadCloud, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 // import { Button } from '@/components/ui/button';
 // import { Input } from '@/components/ui/input';
@@ -13,8 +14,8 @@ const Button = ({ className, children, ...props }: React.ButtonHTMLAttributes<HT
     <button className={cn("inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50", className)} {...props}>
       {children}
     </button>
-);
-// @ts-ignore
+  );
+// Removed unused @ts-expect-error
 Button.defaultProps = { variant: "default", size: "default" };
 const Input = ({ className, ...props }: React.InputHTMLAttributes<HTMLInputElement>) => (
     <input className={cn("flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50", className)} {...props} />
@@ -32,7 +33,7 @@ interface VerificationResult {
     assetName: string;
     status: string;
     timestamp: string;
-    anchoringTxHash: string | null;
+    anchoringTxHash: string | null; // Note: This might be the minting tx hash now
     nftContractAddress: string | null;
     nftTokenId: string | null;
     metadataCid: string | null;
@@ -110,15 +111,24 @@ const VerificationTool: React.FC = () => {
         throw new Error(response.data?.message || 'Verification failed with status: ' + response.status);
       }
 
-    } catch (error: any) {
+    } catch (error: unknown) { // Type error as unknown
       console.error('Verification error:', error);
-      if (error.response?.status === 404) {
-          setStatus('not_found');
-          setErrorMessage(error.response?.data?.message || 'Record not found.');
-      } else {
+      let message = 'An unknown error occurred during verification.';
+      if (axios.isAxiosError(error)) {
+          if (error.response?.status === 404) {
+              setStatus('not_found');
+              message = error.response?.data?.message || 'Record not found.';
+          } else {
+              setStatus('error');
+              message = error.response?.data?.message || error.message;
+          }
+      } else if (error instanceof Error) {
           setStatus('error');
-          setErrorMessage(error.response?.data?.message || error.message || 'An unknown error occurred during verification.');
+          message = error.message;
+      } else {
+          setStatus('error'); // Keep generic error status
       }
+      setErrorMessage(message);
     }
   };
 
@@ -131,19 +141,21 @@ const VerificationTool: React.FC = () => {
   // Helper to create explorer links (adjust base URLs as needed)
   const getExplorerLink = (type: 'tx' | 'address' | 'token', value: string | null | undefined): string | null => {
       if (!value) return null;
-      // TODO: Use env variables for base URLs
-      const polygonScanBase = "https://polygonscan.com"; // Or Mumbai testnet
+      // Use Amoy PolygonScan
+      const polygonScanBase = "https://amoy.polygonscan.com";
+      const contractAddress = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS ?? ''; // Get contract address
       switch(type) {
           case 'tx': return `${polygonScanBase}/tx/${value}`;
           case 'address': return `${polygonScanBase}/address/${value}`;
-          case 'token': return `${polygonScanBase}/token/${process.env.NEXT_PUBLIC_CONTRACT_ADDRESS}?a=${value}`; // Assumes contract address is in env
+          // Correct link format for NFT on PolygonScan
+          case 'token': return `${polygonScanBase}/nft/${contractAddress}/${value}`;
           default: return null;
       }
   }
   const getIpfsLink = (cid: string | null | undefined): string | null => {
       if (!cid) return null;
       // TODO: Use env variable for preferred gateway
-      return `https://ipfs.io/ipfs/${cid}`;
+      return `https://gateway.pinata.cloud/ipfs/${cid}`; // Use Pinata gateway
   }
 
 
@@ -227,7 +239,8 @@ const VerificationTool: React.FC = () => {
                     <p className="font-mono"><strong>File SHA-256:</strong> {result.fileHash}</p>
                     <p><strong>File IPFS CID:</strong> <ExternalLink href={getIpfsLink(result.fileCid)}>{result.fileCid}</ExternalLink></p>
                     <p><strong>Metadata IPFS CID:</strong> <ExternalLink href={getIpfsLink(result.metadataCid)}>{result.metadataCid}</ExternalLink></p>
-                    <p><strong>Anchor TX:</strong> <ExternalLink href={getExplorerLink('tx', result.anchoringTxHash)}>{result.anchoringTxHash}</ExternalLink></p>
+                    {/* Updated field name from anchoringTxHash to blockchain_tx_hash if needed based on backend response */}
+                    <p><strong>Minting TX:</strong> <ExternalLink href={getExplorerLink('tx', result.anchoringTxHash)}>{result.anchoringTxHash}</ExternalLink></p>
                     <p><strong>NFT Contract:</strong> <ExternalLink href={getExplorerLink('address', result.nftContractAddress)}>{result.nftContractAddress}</ExternalLink></p>
                     <p><strong>NFT Token ID:</strong> <ExternalLink href={getExplorerLink('token', result.nftTokenId)}>{result.nftTokenId}</ExternalLink></p>
                 </div>
