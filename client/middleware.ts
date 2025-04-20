@@ -1,41 +1,105 @@
-import { NextResponse, type NextRequest } from 'next/server'
-import { createMiddlewareClient } from './src/lib/supabase/edge'
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
+import { createServerClient } from '@supabase/ssr'
 
-// Edge Runtime middleware
 export async function middleware(request: NextRequest) {
-  // Create supabase server client
-  const { supabase, response } = createMiddlewareClient(request)
+  try {
+    // Create a response object to modify
+    let response = NextResponse.next({
+      request: {
+        headers: request.headers,
+      },
+    })
 
-  // Refresh session if expired
-  const { data: { session } } = await supabase.auth.getSession()
+    // Create a Supabase client using the server component helper
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(name) {
+            return request.cookies.get(name)?.value
+          },
+          set(name, value, options) {
+            // If the cookie is updated, update the request headers
+            request.cookies.set({
+              name,
+              value,
+              ...options,
+            })
+            
+            // Update the response headers
+            response = NextResponse.next({
+              request: {
+                headers: request.headers,
+              },
+            })
+            
+            response.cookies.set({
+              name,
+              value,
+              ...options,
+            })
+          },
+          remove(name, options) {
+            // If the cookie is removed, update the request headers
+            request.cookies.set({
+              name,
+              value: '',
+              ...options,
+            })
+            
+            // Update the response headers
+            response = NextResponse.next({
+              request: {
+                headers: request.headers,
+              },
+            })
+            
+            response.cookies.set({
+              name,
+              value: '',
+              ...options,
+            })
+          },
+        },
+      }
+    )
 
-  const { pathname } = request.nextUrl
-  const isLoggedIn = !!session
+    // Refresh the session
+    const { data: { session } } = await supabase.auth.getSession()
+    
+    // Check authentication status
+    const isLoggedIn = !!session
+    const { pathname } = request.nextUrl
 
-  // Define protected routes and public routes
-  const protectedRoutes = ['/dashboard'] // Add any other routes that require login
-  const publicRoutes = ['/', '/login'] // Add any other public routes
+    // Redirect authenticated users from public pages to dashboard
+    if (isLoggedIn && (pathname === '/' || pathname === '/login')) {
+      return NextResponse.redirect(new URL('/dashboard', request.url))
+    }
+    
+    // Redirect unauthenticated users from protected pages to login
+    if (!isLoggedIn && pathname.startsWith('/dashboard')) {
+      return NextResponse.redirect(new URL('/login', request.url))
+    }
 
-  // Redirect logged-in users away from home page to dashboard
-  if (isLoggedIn && pathname === '/') {
-    return NextResponse.redirect(new URL('/dashboard', request.url))
+    return response
+  } catch (e) {
+    // If there's an error, we'll just pass the request through
+    return NextResponse.next({
+      request: {
+        headers: request.headers,
+      },
+    })
   }
-
-  // Redirect logged-in users away from login page to dashboard
-  if (isLoggedIn && pathname === '/login') {
-    return NextResponse.redirect(new URL('/dashboard', request.url))
-  }
-
-  // Redirect logged-out users trying to access protected routes to login
-  if (!isLoggedIn && protectedRoutes.some(route => pathname.startsWith(route))) {
-    return NextResponse.redirect(new URL('/login', request.url))
-  }
-
-  // Allow request to continue for all other cases
-  return response
 }
 
+// Apply middleware only to relevant paths
 export const config = {
-  // Simplified matcher that covers the essential paths
-  matcher: ['/', '/login', '/dashboard/:path*']
+  matcher: [
+    '/',
+    '/login',
+    '/dashboard',
+    '/dashboard/(.*)',
+  ],
 }

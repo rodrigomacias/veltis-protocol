@@ -16,10 +16,6 @@ const nextConfig: NextConfig = {
         destination: `${backendUrl}/api/:path*`,
       },
     ]
-  },
-  // Ensure Edge Runtime is properly supported
-  experimental: {
-    serverComponentsExternalPackages: []
   }
 };
 
