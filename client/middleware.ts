@@ -1,11 +1,64 @@
-import { NextResponse, type NextRequest } from 'next/server'
-import { createClient } from './src/lib/supabase/middleware' // Use relative path for Edge compatibility
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
+import { createServerClient, type CookieOptions } from '@supabase/ssr'
 
+// This function can be marked `async` if using `await` inside
 export async function middleware(request: NextRequest) {
-  const { supabase, response } = createClient(request)
+  // Create new response
+  let response = NextResponse.next({
+    request: {
+      headers: request.headers,
+    },
+  })
 
-  // Refresh session if expired - required for Server Components
-  // https://supabase.com/docs/guides/auth/auth-helpers/nextjs#managing-session-with-middleware
+  // Create supabase server client
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return request.cookies.get(name)?.value
+        },
+        set(name: string, value: string, options: CookieOptions) {
+          request.cookies.set({
+            name,
+            value,
+            ...options,
+          })
+          response = NextResponse.next({
+            request: {
+              headers: request.headers,
+            },
+          })
+          response.cookies.set({
+            name,
+            value,
+            ...options,
+          })
+        },
+        remove(name: string, options: CookieOptions) {
+          request.cookies.set({
+            name,
+            value: '',
+            ...options,
+          })
+          response = NextResponse.next({
+            request: {
+              headers: request.headers,
+            },
+          })
+          response.cookies.set({
+            name,
+            value: '',
+            ...options,
+          })
+        },
+      },
+    }
+  )
+
+  // Refresh session if expired
   const { data: { session } } = await supabase.auth.getSession()
 
   const { pathname } = request.nextUrl
@@ -17,19 +70,16 @@ export async function middleware(request: NextRequest) {
 
   // Redirect logged-in users away from home page to dashboard
   if (isLoggedIn && pathname === '/') {
-    console.log('[Middleware] User logged in, redirecting from / to /dashboard');
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 
   // Redirect logged-in users away from login page to dashboard
   if (isLoggedIn && pathname === '/login') {
-    console.log('[Middleware] User logged in, redirecting from /login to /dashboard');
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 
   // Redirect logged-out users trying to access protected routes to login
-  if (!isLoggedIn && protectedRoutes.includes(pathname)) {
-     console.log(`[Middleware] User not logged in, redirecting from ${pathname} to /login`);
+  if (!isLoggedIn && protectedRoutes.some(route => pathname.startsWith(route))) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
@@ -38,18 +88,6 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * Feel free to modify this pattern to include more paths.
-     */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
-    // Apply middleware specifically to root, login and dashboard
-     '/',
-     '/login',
-     '/dashboard',
-  ],
+  // Simplified matcher that covers the essential paths
+  matcher: ['/', '/login', '/dashboard/:path*']
 }

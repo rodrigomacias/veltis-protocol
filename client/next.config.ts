@@ -17,6 +17,10 @@ const nextConfig: NextConfig = {
       },
     ]
   },
+  // Ensure Edge Runtime is properly supported
+  experimental: {
+    serverComponentsExternalPackages: []
+  }
 };
 
 export default nextConfig;
