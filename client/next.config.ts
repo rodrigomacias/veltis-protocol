@@ -2,6 +2,8 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /* config options here */
+  // Set static export to bypass Vercel's build process issues
+  output: 'export',
   // Disable lightningcss to prevent Linux module loading issues
   experimental: {
     useLightningcss: false,
@@ -10,7 +12,9 @@ const nextConfig: NextConfig = {
   webpack: (config) => {
     return config;
   },
-  // Add rewrites to proxy API requests to the backend during development
+  // NOTE: Rewrites are disabled in static export mode
+  // If you remove 'output: export', uncomment this section
+  /*
   async rewrites() {
     // Ensure the backend URL is correctly read from the environment variable
     const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'; // Default if not set
@@ -22,6 +26,7 @@ const nextConfig: NextConfig = {
       },
     ]
   },
+  */
 };
 
 export default nextConfig;
