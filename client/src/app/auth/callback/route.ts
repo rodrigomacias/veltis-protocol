@@ -1,3 +1,6 @@
+// Mark this route handler as dynamic to ensure it's never static
+export const dynamic = 'force-dynamic';
+
 import { createClient } from '@/lib/supabase/server'; // Use server client
 import { NextResponse } from 'next/server';
 

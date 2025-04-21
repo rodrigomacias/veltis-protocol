@@ -1,3 +1,6 @@
+// Mark this route as dynamically rendered to ensure proper auth handling
+export const dynamic = 'force-dynamic';
+
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 

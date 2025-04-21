@@ -1,21 +1,28 @@
-'use client'; // Keep only one 'use client' at the top
+'use client';
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { ethers, Signer, Log, EventLog } from 'ethers'; // Import Log and EventLog types
+import { ethers, Signer, Log, EventLog, InterfaceAbi } from 'ethers';
 import { createClient } from '@/lib/supabase/client';
-// Removed unused icons: Info, Zap
 import { UploadCloud, Loader2, CheckCircle, AlertCircle, Wallet } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import VeltisIPNFT_ABI from '../../../../server/src/config/VeltisIPNFT.abi.json'; // Adjust path as needed
+import WalletConnector from '../blockchain/WalletConnector';
 
-// TODO: Replace with actual Shadcn Button import if available after adding component
+// Import the ABI with dynamic import (bypassing TypeScript issues)
+// @ts-ignore - Import JSON file directly
+import * as rawAbi from '../../../../server/src/config/VeltisIPNFT.abi.json';
+// Cast the imported ABI to the correct type
+const contractAbi: InterfaceAbi = rawAbi as unknown as InterfaceAbi;
+
+// Temporary Button component - replace with Shadcn Button when available
 const Button = ({ className, children, ...props }: React.ButtonHTMLAttributes<HTMLButtonElement>) => (
-    <button className={cn("inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50", className)} {...props}>
-      {children}
-    </button>
-  );
-Button.defaultProps = { variant: "default", size: "default" }; // Removed @ts-ignore
+  <button 
+    className={cn("inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50", className)} 
+    {...props}
+  >
+    {children}
+  </button>
+);
 
 // Define more granular statuses for the multi-step process
 type UploadMintStatus =
@@ -72,14 +79,6 @@ const formatBytes = (bytes: number, decimals = 2): string => {
 const FREE_TIER_RECORD_LIMIT = 5;
 const FREE_TIER_STORAGE_LIMIT_BYTES = 100 * 1024 * 1024; // 100MB
 
-// Define a more specific type for the Ethereum provider injected by wallets
-type Eip1193Provider = ethers.Eip1193Provider & {
-  on?: (event: 'accountsChanged', listener: (accounts: string[]) => void) => Eip1193Provider;
-  removeListener?: (event: 'accountsChanged', listener: (accounts: string[]) => void) => Eip1193Provider;
-  // Add other potential event signatures here if needed
-};
-
-
 const FileUploadComponent: React.FC = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [status, setStatus] = useState<UploadMintStatus>('idle');
@@ -89,89 +88,9 @@ const FileUploadComponent: React.FC = () => {
   const [loadingProfile, setLoadingProfile] = useState<boolean>(true);
   const [userId, setUserId] = useState<string | null>(null);
   const [userAddress, setUserAddress] = useState<string | null>(null);
-  // const [provider, setProvider] = useState<ethers.BrowserProvider | null>(null); // Removed unused provider state
   const [signer, setSigner] = useState<Signer | null>(null);
   const [mintTxHash, setMintTxHash] = useState<string | null>(null);
   const supabase = createClient();
-
-  // --- Wallet Connection ---
-  const connectWallet = useCallback(async () => {
-    const ethereumProvider = window.ethereum as Eip1193Provider | undefined;
-
-    if (ethereumProvider) {
-      try {
-        const browserProvider = new ethers.BrowserProvider(ethereumProvider);
-        const accounts: string[] = await browserProvider.send("eth_requestAccounts", []);
-        const walletSigner: Signer = await browserProvider.getSigner();
-        setSigner(walletSigner);
-        setUserAddress(accounts[0]);
-        console.log("Wallet connected:", accounts[0]);
-        setErrorMessage(null);
-      } catch (error: unknown) { // Use unknown
-        const errorMsg = error instanceof Error ? error.message : String(error);
-        console.error("Failed to connect wallet:", errorMsg);
-        setErrorMessage(`Failed to connect wallet: ${errorMsg || 'Unknown error'}`);
-        setStatus('error');
-        setSigner(null);
-        setUserAddress(null);
-      }
-    } else {
-      setErrorMessage('Metamask (or other EIP-1193 provider) not detected. Please install it.');
-      setStatus('error');
-    }
-  }, []);
-
-  // Effect to check connection on load and handle account changes
-  useEffect(() => {
-    const ethereumProvider = window.ethereum as Eip1193Provider | undefined;
-
-    const checkConnection = async () => {
-       if (ethereumProvider) {
-           const browserProvider = new ethers.BrowserProvider(ethereumProvider);
-           const accounts = await browserProvider.listAccounts();
-           if (accounts.length > 0) {
-               const walletSigner: Signer = await browserProvider.getSigner();
-               setSigner(walletSigner);
-               const currentAddress = accounts[0].address;
-               setUserAddress(currentAddress);
-               console.log("Wallet already connected:", currentAddress);
-           }
-       }
-    };
-    checkConnection();
-
-    // Define the account change handler separately
-    const handleAccountsChanged = (accounts: string[]) => { // Type accounts explicitly
-        console.log("Accounts changed:", accounts);
-        if (accounts.length > 0) {
-            connectWallet(); // Reconnect with the new account
-        } else {
-            setSigner(null);
-            setUserAddress(null);
-            console.log("Wallet disconnected");
-        }
-    };
-
-    // Listen for account changes
-    if (ethereumProvider?.on) {
-        ethereumProvider.on('accountsChanged', handleAccountsChanged);
-    }
-
-    // Cleanup listener on unmount
-    return () => {
-        if (ethereumProvider?.removeListener) {
-             try {
-                 ethereumProvider.removeListener('accountsChanged', handleAccountsChanged);
-                 console.log("Removed accountsChanged listener.");
-             } catch (error: unknown) { // Use unknown
-                 const errorMsg = error instanceof Error ? error.message : String(error);
-                 console.warn("Could not remove accountsChanged listener:", errorMsg);
-             }
-        }
-    };
-
-  }, [connectWallet]);
-
 
   // --- Fetch User Profile Data ---
   useEffect(() => {
@@ -276,7 +195,7 @@ const FileUploadComponent: React.FC = () => {
           throw new Error("Contract address configuration is missing. Cannot mint.");
       }
 
-      const contract = new ethers.Contract(contractAddress, VeltisIPNFT_ABI, signer);
+      const contract = new ethers.Contract(contractAddress, contractAbi, signer);
 
       console.log(`Attempting to mint with URI: ${prepareMintData.tokenUri} to address: ${userAddress}`);
       const mintTransaction = await contract.safeMint(userAddress, prepareMintData.tokenUri);
@@ -403,19 +322,17 @@ const FileUploadComponent: React.FC = () => {
           <p className="text-sm text-muted-foreground">Selected: {selectedFile.name} ({(selectedFile.size / 1024).toFixed(2)} KB)</p>
         )}
 
-        {!userAddress && (
-            <Button
-                type="button"
-                onClick={connectWallet}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white justify-center"
-                disabled={status !== 'idle' && status !== 'error'}
-            >
-                <Wallet className="mr-2 h-4 w-4" /> Connect Wallet
-            </Button>
-        )}
-        {userAddress && (
-             <p className="text-xs text-muted-foreground text-center truncate">Connected: {userAddress}</p>
-        )}
+        <WalletConnector 
+          onConnected={(address, walletSigner) => {
+            setUserAddress(address);
+            setSigner(walletSigner);
+          }}
+          onDisconnected={() => {
+            setUserAddress(null);
+            setSigner(null);
+          }}
+          buttonClassName="w-full justify-center" 
+        />
 
         <Button
           type="submit"

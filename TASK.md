@@ -7,10 +7,10 @@
     *   [ ] Use GitHub MCP to examine specific contracts/code.
 *   [ ] **Propose New Smart Contract Design:** Based on research, define the architecture for the new IPNFT contract(s) (e.g., core ERC721, factory, metadata standards, user minting flow). Present design for approval.
     *   **Decision (2025-04-16):** Proceed with direct user-driven minting via Metamask for a new ERC-721 contract (UUPS upgradeable). Defer separate "Proof of Invention" (PoI) step for MVP. Core flow: User Upload -> Backend Prepares Metadata URI -> Frontend Prompts Metamask Mint Signature.
-*   [ ] **Implement New Smart Contract(s):** Write Solidity code for the approved design (`VeltisIPNFT.sol`).
-*   [ ] **Write Unit Tests:** Develop comprehensive tests for the new contract (`VeltisIPNFT.test.ts`).
-*   [ ] **Refactor Backend:** Update `blockchain.ts`, controllers, and potentially services to interact with the *new* contract ABI and handle the user-driven minting flow (likely involving frontend signing).
-*   [ ] **Refactor Frontend:** Implement Metamask connection, transaction signing for minting, and update UI elements related to NFT display and interaction.
+*   [x] **Implement New Smart Contract(s):** Write Solidity code for the approved design (`VeltisIPNFT.sol`). (Completed: 2025-04-21)
+*   [x] **Write Unit Tests:** Develop comprehensive tests for the new contract (`VeltisIPNFT.test.ts`). (Completed: 2025-04-21)
+*   [x] **Refactor Backend:** Updated `blockchain.ts` to handle the new contract ABI and created server endpoints for preparing metadata and confirming mints. (Completed: 2025-04-21)
+*   [x] **Refactor Frontend:** Implemented Metamask wallet connection with the new WalletConnector component and updated FileUploadComponent to support direct user minting. (Completed: 2025-04-21)
 *   [ ] **Update Database:** Modify schema (`ip_records`, etc.) if required by the new contract design or minting flow.
 *   [ ] **Deploy & Test:** Deploy the new contract(s) to Amoy testnet and perform thorough end-to-end testing.
 
@@ -85,4 +85,10 @@
     * Created server-side authentication in dashboard/layout.tsx and verify/layout.tsx
     * Refactored supabase/server.ts to handle cookies properly in Server Components
     * This resolved the "No fetch event listeners found" error in Vercel's Edge Runtime
+    * (Completed: 2025-04-21)
+*   [x] **Fix 404 Error on Deployed Site:** Fixed 404 errors during static generation by updating rendering strategy:
+    * Added explicit dynamic configuration to protected routes with 'force-dynamic'
+    * Added explicit static configuration to public routes with 'force-static'
+    * Fixed auth callback route to properly handle dynamic rendering
+    * Updated Next.js config to set proper rendering modes and server action origins
     * (Completed: 2025-04-21)
