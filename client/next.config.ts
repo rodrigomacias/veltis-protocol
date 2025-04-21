@@ -7,15 +7,18 @@ const nextConfig: NextConfig = {
   },
   // Add rewrites to proxy API requests to the backend during development
   async rewrites() {
-    // Ensure the backend URL is correctly read from the environment variable
-    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'; // Default if not set
-    return [
-      {
-        // Proxy requests starting with /api/ to the backend server
-        source: '/api/:path*',
-        destination: `${backendUrl}/api/:path*`,
-      },
-    ]
+    if (process.env.NODE_ENV === 'development') {
+      // In development, use the local backend
+      return [
+        {
+          source: '/api/:path*',
+          destination: 'http://localhost:5001/api/:path*',
+        },
+      ];
+    } else {
+      // In production, use the production API (handled by Vercel config)
+      return [];
+    }
   }
 };
 
