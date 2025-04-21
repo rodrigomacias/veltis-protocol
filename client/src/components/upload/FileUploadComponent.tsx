@@ -4,13 +4,13 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { ethers, Signer, Log, EventLog, InterfaceAbi } from 'ethers';
 import { createClient } from '@/lib/supabase/client';
-import { UploadCloud, Loader2, CheckCircle, AlertCircle, Wallet } from 'lucide-react';
+import { UploadCloud, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import WalletConnector from '../blockchain/WalletConnector';
 
 // Import the ABI with dynamic import (bypassing TypeScript issues)
-// @ts-ignore - Import JSON file directly
-import * as rawAbi from '../../../../server/src/config/VeltisIPNFT.abi.json';
+// @ts-expect-error - Import JSON file directly
+import * as rawAbi from '@/config/VeltisIPNFT.abi.json';
 // Cast the imported ABI to the correct type
 const contractAbi: InterfaceAbi = rawAbi as unknown as InterfaceAbi;
 

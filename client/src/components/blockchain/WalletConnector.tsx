@@ -75,9 +75,10 @@ const WalletConnector: React.FC<WalletConnectorProps> = ({
         params: [{ chainId: `0x${requiredChainId.toString(16)}` }], // Convert to hex
       });
       return true;
-    } catch (switchError: any) {
+    } catch (switchError: unknown) {
       // This error code indicates that the chain has not been added to MetaMask.
-      if (switchError.code === 4902) {
+      const errorObj = switchError as { code: number };
+      if (errorObj.code === 4902) {
         try {
           await ethereumProvider.request({
             method: 'wallet_addEthereumChain',

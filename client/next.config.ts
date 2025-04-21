@@ -3,6 +3,11 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   /* config options here */
   webpack: (config) => {
+    // Add support for importing JSON files directly
+    config.module.rules.push({
+      test: /\.json$/,
+      type: 'json',
+    });
     return config;
   },
   // Use correct static export option - not using 'hybrid' as it's not in the type definition
