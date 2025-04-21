@@ -4,5 +4,8 @@
       "source": "/api/:path*",
       "destination": "https://api.veltis.com/api/:path*"
     }
-  ]
+  ],
+  "buildCommand": "cd client && npm install --no-package-lock && npm run build",
+  "outputDirectory": "client/.next",
+  "framework": "nextjs"
 }

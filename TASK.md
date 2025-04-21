@@ -91,9 +91,9 @@
     * Added explicit static configuration to public routes with 'force-static'
     * Fixed auth callback route to properly handle dynamic rendering
     * Updated Next.js config to set proper rendering modes and server action origins
-    * Fixed Vercel deployment configuration by simplifying vercel.json and adding specific files:
-      - Simplified root vercel.json to only include API rewrites
+    * Fixed Vercel deployment configuration by updating configuration files:
+      - Modified the build command to use `npm install --no-package-lock` to prevent dependency conflicts
       - Added .vercelignore to control which files are deployed
       - Added client/vercel.json to set framework type
-      - This approach lets Vercel auto-detect the Next.js app in the client directory
+      - Created fresh dependency installation to resolve EOVERRIDE errors
     * (Completed: 2025-04-21)
