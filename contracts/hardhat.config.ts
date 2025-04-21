@@ -7,8 +7,8 @@ import "@nomicfoundation/hardhat-ignition-ethers"; // Requires ignition-core and
 import path from "path";
 import dotenv from 'dotenv'; // Import dotenv
 
-// Load .env file from the current directory
-dotenv.config({ path: path.resolve(__dirname, '.env') });
+// Explicitly load .env file from the project root (one directory up)
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 // No need to import hre, plugins extend the HRE automatically when required here.
 
