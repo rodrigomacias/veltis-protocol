@@ -91,4 +91,5 @@
     * Added explicit static configuration to public routes with 'force-static'
     * Fixed auth callback route to properly handle dynamic rendering
     * Updated Next.js config to set proper rendering modes and server action origins
+    * Fixed Vercel deployment configuration by replacing invalid 'rootDirectory' with 'outputDirectory'
     * (Completed: 2025-04-21)
