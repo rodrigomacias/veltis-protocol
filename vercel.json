@@ -4,8 +4,5 @@
       "source": "/api/:path*",
       "destination": "https://api.veltis.com/api/:path*"
     }
-  ],
-  "buildCommand": "npm install --prefix client --no-optional --legacy-peer-deps && npm run build --prefix client",
-  "outputDirectory": "client/.next",
-  "framework": "nextjs"
+  ]
 }

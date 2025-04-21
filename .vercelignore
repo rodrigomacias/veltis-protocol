@@ -1,0 +1,7 @@
+# Ignore all files and directories except the client directory
+/*
+!client
+!vercel.json
+
+# Ignore node_modules within client
+client/node_modules

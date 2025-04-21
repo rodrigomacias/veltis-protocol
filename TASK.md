@@ -91,6 +91,9 @@
     * Added explicit static configuration to public routes with 'force-static'
     * Fixed auth callback route to properly handle dynamic rendering
     * Updated Next.js config to set proper rendering modes and server action origins
-    * Fixed Vercel deployment configuration by replacing invalid 'rootDirectory' with 'outputDirectory'
-    * Fixed build command to use '--prefix client' instead of 'cd client' for proper execution
+    * Fixed Vercel deployment configuration by simplifying vercel.json and adding specific files:
+      - Simplified root vercel.json to only include API rewrites
+      - Added .vercelignore to control which files are deployed
+      - Added client/vercel.json to set framework type
+      - This approach lets Vercel auto-detect the Next.js app in the client directory
     * (Completed: 2025-04-21)
