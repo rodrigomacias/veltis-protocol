@@ -80,4 +80,9 @@
 
 ## Discovered During Work
 
-*   *(Empty)*
+*   [x] **Fix Edge Runtime Authentication Error:** Fixed Vercel deployment issue by moving authentication logic from Edge middleware to Server Components. Implemented authentication in dashboard and verification layout components. Specifically:
+    * Renamed middleware.ts to _middleware.ts to disable it
+    * Created server-side authentication in dashboard/layout.tsx and verify/layout.tsx
+    * Refactored supabase/server.ts to handle cookies properly in Server Components
+    * This resolved the "No fetch event listeners found" error in Vercel's Edge Runtime
+    * (Completed: 2025-04-21)
