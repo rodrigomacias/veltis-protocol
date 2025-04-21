@@ -1,6 +1,3 @@
-// Mark this page as statically generated for better performance
-export const dynamic = 'force-static';
-
 // Removed unused imports: createClient, cookies
 import Header from '@/components/landing/Header';
 import HeroSection from '@/components/landing/HeroSection';

@@ -1,8 +1,6 @@
-// Mark this route handler as dynamic to ensure it's never static
-export const dynamic = 'force-dynamic';
-
 import { createClient } from '@/lib/supabase/server'; // Use server client
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 
 /**
  * Route Handler for Supabase Auth Callback.
@@ -18,8 +16,8 @@ export async function GET(request: Request) {
   const origin = requestUrl.origin; // Get the origin for redirection
 
   if (code) {
-    // Get a supabase client configured to use cookies (handled internally)
-    const supabase = createClient();
+    const cookieStore = await cookies();
+    const supabase = createClient(cookieStore);
 
     try {
       // Exchange the code for a session
